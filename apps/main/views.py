@@ -63,6 +63,24 @@ DUMMY_TRANSACTIONS = {
             'keterangan': 'Voucher Kopi Rp50.000 (RWD-001)',
             'miles': -500,
         },
+        {
+            'tanggal': '10 Mar 2025',
+            'jenis': 'Penerbangan',
+            'keterangan': 'Zootopia (ZIA) ke Bunnyburrow (BBN) – GA-123',
+            'miles': 1200,
+        },
+        {
+            'tanggal': '01 Feb 2025',
+            'jenis': 'Bonus',
+            'keterangan': 'Reward Ulang Tahun Anggota',
+            'miles': 500,
+        },
+        {
+            'tanggal': '15 Jan 2025',
+            'jenis': 'Transfer Masuk',
+            'keterangan': 'Dari Chief Bogo – Reward Kasus Hilangnya Otterton',
+            'miles': 1000,
+        },
     ],
 }
 
