@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block title %}Beli Award Miles Package - AeroMiles{% endblock %}
+
+{% block extra_head %}
+<style>
+    .buy-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    /* Tab Button Styles */
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        background: var(--bg-surface);
+        border: 2px solid transparent;
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .tab-button:hover {
+        background: var(--blue-light);
+        color: var(--white);
+    }
+
+    .tab-button.active {
+        background: var(--blue-primary);
+        color: var(--white);
+        border-color: var(--blue-hover);
+    }
+
+    .award-miles-display {
+        background: linear-gradient(135deg, var(--blue-soft), var(--blue-light));
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        color: var(--white);
+        text-align: center;
+        box-shadow: var(--shadow-md);
+    }
+
+    .miles-label {
+        font-size: 0.875rem;
+        opacity: 0.95;
+        margin-bottom: 0.5rem;
+    }
+
+    .miles-amount {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .miles-unit {
+        font-size: 0.875rem;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border);
+    }
+
+    .package-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .package-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .package-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(74,144,226,.15);
+    }
+
+    .package-id {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--blue-primary);
+        margin-bottom: 1rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-tint);
+        border-radius: var(--radius-md);
+        display: inline-block;
+    }
+
+    .package-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .package-details {
+        flex-grow: 1;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        color: var(--text-secondary);
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .miles-value {
+        color: var(--blue-primary);
+        font-size: 1.1rem;
+    }
+
+    .price-value {
+        color: var(--blue-primary);
+        font-size: 1rem;
+    }
+
+    .btn-buy {
+        width: 100%;
+        padding: 0.65rem 1rem;
+        background: var(--blue-primary);
+        color: var(--white);
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-buy:hover {
+        background: var(--blue-hover);
+        transform: translateY(-1px);
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-content {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        max-width: 500px;
+        width: 90%;
+        padding: 0;
+        overflow: hidden;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--blue-soft), var(--blue-light));
+        color: var(--white);
+        padding: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--white);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.2s;
+    }
+
+    .modal-close:hover {
+        opacity: 0.8;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .confirmation-item {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .confirmation-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .confirmation-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .confirmation-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .confirmation-highlight {
+        font-size: 1.5rem;
+        color: var(--blue-primary);
+    }
+
+    .success-box {
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: #166534;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .modal-footer {
+        padding: 1.5rem;
+        background: #F8FAFC;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .modal-footer .btn-primary,
+    .modal-footer .btn-secondary {
+        padding: 0.65rem 2rem;
+    }
+
+    /* History Styles */
+    .history-container {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .history-table thead {
+        background: var(--bg-tint);
+        border-bottom: 2px solid var(--border);
+    }
+
+    .history-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .history-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .history-table tbody tr:hover {
+        background: #F8FAFC;
+    }
+
+    .history-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .history-timestamp {
+        color: #64748B;
+        font-size: 0.85rem;
+    }
+
+    .history-miles {
+        color: var(--blue-primary);
+        font-weight: 600;
+    }
+
+    .history-price {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Messages */
+    .alert {
+        border-radius: var(--radius-lg);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .buy-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1.5rem;
+        }
+
+        .package-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .history-table {
+            font-size: 0.85rem;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 0.75rem;
+        }
+
+        .modal-content {
+            width: 95%;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Header -->
+    <div class="buy-header">
+        <div>
+            <h1 style="color: var(--text-primary); margin-bottom: 0.5rem;">Beli Award Miles Package</h1>
+            <p style="color: var(--text-secondary);">Tingkatkan miles Anda dengan membeli paket award miles</p>
+        </div>
+        <div class="award-miles-display">
+            <div class="miles-label">AWARD MILES ANDA</div>
+            <div class="miles-amount" id="currentAwardMiles">{{ current_award_miles }}</div>
+            <div class="miles-unit">Poin Miles</div>
+        </div>
+    </div>
+
+    <!-- Toggle Buttons -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+        <button type="button" class="tab-button active" onclick="showTab('katalog')" id="btnKatalog">
+            Katalog Paket
+        </button>
+        <button type="button" class="tab-button" onclick="showTab('history')" id="btnHistory">
+            Riwayat Pembelian
+        </button>
+    </div>
+
+    <!-- Katalog Paket Section -->
+    <div id="katalogSection">
+        <h2 class="section-title">Paket Award Miles Tersedia</h2>
+
+    {% if packages %}
+        <div class="package-grid">
+            {% for package in packages %}
+            <div class="package-card">
+                <div class="package-id">{{ package.id }}</div>
+                <div class="package-title">Award Miles Package</div>
+                
+                <div class="package-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Award Miles</span>
+                        <span class="detail-value miles-value">{{ package.jumlah_award_miles }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Harga</span>
+                        <span class="detail-value price-value">Rp {{ package.harga_paket|floatformat:0 }}</span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-buy" onclick="openBuyModal('{{ package.id }}', {{ package.jumlah_award_miles }}, {{ package.harga_paket|floatformat:2 }})">
+                    Beli Paket
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-title">Tidak Ada Paket Tersedia</div>
+        </div>
+    {% endif %}
+    </div>
+
+    <!-- History Section -->
+    <div id="historySection" style="display: none;">
+        <h2 class="section-title">Riwayat Pembelian Award Miles Package</h2>
+
+    {% if transaction_history %}
+        <div class="history-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Paket</th>
+                        <th>Tanggal & Waktu</th>
+                        <th style="text-align: right;">Harga</th>
+                        <th style="text-align: right;">Award Miles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transaction_history %}
+                    <tr>
+                        <td>
+                            <strong>{{ transaction.id_award_miles_package }}</strong>
+                        </td>
+                        <td>
+                            <span class="history-timestamp">{{ transaction.waktu }}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="history-price">Rp {{ transaction.harga_paket|floatformat:0 }}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="history-miles">+{{ transaction.jumlah_award_miles }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="history-container">
+            <div class="empty-state">
+                <div class="empty-state-title">Belum Ada Riwayat Pembelian</div>
+                <p style="font-size: 0.875rem;">Anda belum membeli paket award miles sebelumnya</p>
+            </div>
+        </div>
+    {% endif %}
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Pembelian -->
+<div id="buyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            Konfirmasi Pembelian Award Miles Package
+            <button type="button" class="modal-close" onclick="closeBuyModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="buyForm" method="POST" action="{% url 'miles:process_buy_package' %}">
+                {% csrf_token %}
+
+                <div class="confirmation-item">
+                    <div class="confirmation-label">Paket</div>
+                    <div class="confirmation-value" id="modalPaketId">-</div>
+                </div>
+
+                <div class="confirmation-item">
+                    <div class="confirmation-label">Award Miles yang Akan Diterima</div>
+                    <div class="confirmation-highlight" id="modalMilesAmount">-</div>
+                </div>
+
+                <div class="confirmation-item">
+                    <div class="confirmation-label">Harga</div>
+                    <div class="confirmation-value" id="modalPrice">-</div>
+                </div>
+
+                <div class="confirmation-item">
+                    <div class="confirmation-label">Award Miles Setelah Pembelian</div>
+                    <div class="confirmation-value" id="modalNewTotal">-</div>
+                </div>
+
+                <input type="hidden" id="paketIdInput" name="paket_id" value="">
+
+                <div id="confirmBox" class="success-box">
+                    ✓ Apakah Anda yakin ingin membeli paket ini?
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeBuyModal()">Batal</button>
+            <button type="submit" form="buyForm" class="btn-primary" id="confirmBuyBtn">Konfirmasi Pembelian</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabName) {
+        // Hide all sections
+        document.getElementById('katalogSection').style.display = 'none';
+        document.getElementById('historySection').style.display = 'none';
+
+        // Remove active class from all buttons
+        document.getElementById('btnKatalog').classList.remove('active');
+        document.getElementById('btnHistory').classList.remove('active');
+
+        // Show selected section and mark button as active
+        if (tabName === 'katalog') {
+            document.getElementById('katalogSection').style.display = 'block';
+            document.getElementById('btnKatalog').classList.add('active');
+        } else if (tabName === 'history') {
+            document.getElementById('historySection').style.display = 'block';
+            document.getElementById('btnHistory').classList.add('active');
+        }
+    }
+
+    function openBuyModal(paketId, miles, price) {
+        const currentMiles = parseInt(document.getElementById('currentAwardMiles').textContent);
+        const newTotal = currentMiles + miles;
+
+        document.getElementById('modalPaketId').textContent = paketId;
+        document.getElementById('modalMilesAmount').textContent = miles.toLocaleString('id-ID');
+        document.getElementById('modalPrice').textContent = 'Rp ' + price.toLocaleString('id-ID', {maximumFractionDigits: 0});
+        document.getElementById('modalNewTotal').textContent = newTotal.toLocaleString('id-ID') + ' poin';
+        document.getElementById('paketIdInput').value = paketId;
+
+        document.getElementById('buyModal').classList.add('show');
+    }
+
+    function closeBuyModal() {
+        document.getElementById('buyModal').classList.remove('show');
+    }
+
+    // Close modal on outside click
+    document.getElementById('buyModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeBuyModal();
+        }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeBuyModal();
+        }
+    });
+</script>
+
+{% endblock %}
