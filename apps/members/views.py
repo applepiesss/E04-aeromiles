@@ -1,4 +1,15 @@
 from django.shortcuts import redirect, render
+import datetime;
+
+BULAN_ID = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+            'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
+
+def _fmt_tanggal(iso_str):
+    try:
+        d = datetime.date.fromisoformat(iso_str)
+        return f"{d.day:02d} {BULAN_ID[d.month]} {d.year}"
+    except Exception:
+        return iso_str
 
 MEMBERS_LIST = [
     {'nomor_member':'M0001','email':'strawberry.shortcake@gmail.com','salutation':'Ms.','first_mid_name':'Strawberry','last_name':'Shortcake','nama_lengkap':'Ms. Strawberry Shortcake','id_tier':'TIR-BLU','tier':'Blue','award_miles':1200,'total_miles':3500,'tanggal_bergabung':'10 Jan 2023','country_code':'+1','mobile_number':'5551901615','tanggal_lahir_iso':'1990-06-15','kewarganegaraan':'American'},
@@ -56,6 +67,25 @@ MEMBERS_LIST = [
     {'nomor_member':'M0050','email':'josh.sanderson@ui.ac.id','salutation':'Mr.','first_mid_name':'Josh','last_name':'Sanderson','nama_lengkap':'Mr. Josh Sanderson','id_tier':'TIR-PLT','tier':'Platinum','award_miles':129800,'total_miles':275200,'tanggal_bergabung':'05 Des 2020','country_code':'+1','mobile_number':'5559940315','tanggal_lahir_iso':'1994-03-15','kewarganegaraan':'American'},
 ]
 
+IDENTITAS_LIST = {
+    'judy.hopps@yahoo.com': [
+        {
+            'nomor': 'US-KTP-008',
+            'jenis': 'KTP',
+            'negara_penerbit': 'United States',
+            'tanggal_terbit_iso': '2011-11-03',
+            'tanggal_habis_iso': '9999-12-31',
+        },
+        {
+            'nomor': 'US-PP-JH-001',
+            'jenis': 'Paspor',
+            'negara_penerbit': 'United States',
+            'tanggal_terbit_iso': '2019-06-01',
+            'tanggal_habis_iso': '2029-06-01',
+        },
+    ],
+}
+
 
 def kelola_member(request):
     role = request.session.get('role')
@@ -82,3 +112,62 @@ def hapus_member(request, nomor):
         pass
     return redirect('members:kelola_member')
 
+
+def _build_identitas(raw_list):
+    today = datetime.date.today()
+    result = []
+    for item in raw_list:
+        habis_iso = item['tanggal_habis_iso']
+        habis_date = datetime.date.fromisoformat(habis_iso)
+        never_expires = habis_date >= datetime.date(9999, 12, 31)
+
+        if never_expires:
+            status = 'Aktif'
+            status_class = 'badge-aktif'
+            tanggal_habis_display = 'Tidak Kedaluwarsa'
+        elif habis_date >= today:
+            status = 'Aktif'
+            status_class = 'badge-aktif'
+            tanggal_habis_display = _fmt_tanggal(habis_iso)
+        else:
+            status = 'Kedaluwarsa'
+            status_class = 'badge-kedaluwarsa'
+            tanggal_habis_display = _fmt_tanggal(habis_iso)
+
+        result.append({
+            **item,
+            'tanggal_terbit_display': _fmt_tanggal(item['tanggal_terbit_iso']),
+            'tanggal_habis_display': tanggal_habis_display,
+            'status': status,
+            'status_class': status_class,
+        })
+    return result
+
+
+def identitas(request):
+    if request.session.get('role') != 'member':
+        return redirect('main:dashboard')
+    email = request.session.get('email', '')
+    raw = IDENTITAS_LIST.get(email, [])
+    context = {
+        'identitas_list': _build_identitas(raw),
+    }
+    return render(request, 'identitas.html', context)
+
+
+def tambah_identitas(request):
+    if request.method == 'POST':
+        pass 
+    return redirect('members:identitas')
+
+
+def edit_identitas(request, nomor):
+    if request.method == 'POST':
+        pass
+    return redirect('members:identitas')
+
+
+def hapus_identitas(request, nomor):
+    if request.method == 'POST':
+        pass
+    return redirect('members:identitas')
