@@ -55,7 +55,7 @@
 <div class="page-wrapper">
     <div class="page-header">
         <h1>Dashboard</h1>
-        <p>Selamat datang, {{ pengguna.nama }}</p>
+        <p>Selamat datang, {{ nama_lengkap }}</p>
     </div>
 
 {% if role == 'member' %}
@@ -64,25 +64,25 @@
         <div class="card">
             <p class="section-title">Informasi Pribadi</p>
             <dl class="info-grid">
-                <dt>Nama Lengkap</dt><dd>{{ pengguna.nama }}</dd>
-                <dt>Email</dt><dd>{{ request.session.email }}</dd>
-                <dt>Telepon</dt><dd>{{ pengguna.country_code }} {{ pengguna.mobile_number }}</dd>
-                <dt>Kewarganegaraan</dt><dd>{{ pengguna.kewarganegaraan }}</dd>
-                <dt>Tanggal Lahir</dt><dd>{{ pengguna.tanggal_lahir }}</dd>
+                <dt>Nama Lengkap</dt><dd>{{ nama_lengkap }}</dd>
+                <dt>Email</dt><dd>{{ email }}</dd>
+                <dt>Telepon</dt><dd>{{ telepon }}</dd>
+                <dt>Kewarganegaraan</dt><dd>{{ kewarganegaraan }}</dd>
+                <dt>Tanggal Lahir</dt><dd>{{ tanggal_lahir }}</dd>
             </dl>
         </div>
 
         <div class="card">
             <p class="section-title">Keanggotaan</p>
             <dl class="info-grid">
-                <dt>Nomor Member</dt><dd>{{ member.nomor_member }}</dd>
+                <dt>Nomor Member</dt><dd>{{ nomor_member }}</dd>
                 <dt>Tier</dt>
-                <dd><span class="badge-tier badge-{{ member.id_tier }}">{{ member.tier }}</span></dd>
-                <dt>Bergabung</dt><dd>{{ member.tanggal_bergabung }}</dd>
+                <dd><span class="badge-tier badge-{{ id_tier }}">{{ tier }}</span></dd>
+                <dt>Bergabung</dt><dd>{{ tanggal_bergabung }}</dd>
                 <dt>Total Miles</dt>
                 <dd>
-                    <span class="miles-total">{{ member.total_miles|intcomma }}</span>
-                    <p class="miles-sub">Award Miles: {{ member.award_miles|intcomma }}</p>
+                    <span class="miles-total">{{ total_miles|intcomma }}</span>
+                    <p class="miles-sub">Award Miles: {{ award_miles|intcomma }}</p>
                 </dd>
             </dl>
         </div>
@@ -106,10 +106,10 @@
                     <td>{{ tx.jenis }}</td>
                     <td>{{ tx.keterangan }}</td>
                     <td style="text-align:right">
-                        {% if tx.miles > 0 %}
-                            <span class="miles-pos">+{{ tx.miles|intcomma }}</span>
+                        {% if tx.jumlah > 0 %}
+                            <span class="miles-pos">+{{ tx.jumlah|intcomma }}</span>
                         {% else %}
-                            <span class="miles-neg">{{ tx.miles|intcomma }}</span>
+                            <span class="miles-neg">{{ tx.jumlah|intcomma }}</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -126,35 +126,35 @@
         <div class="card">
             <p class="section-title">Informasi Pribadi</p>
             <dl class="info-grid">
-                <dt>Nama Lengkap</dt><dd>{{ pengguna.nama }}</dd>
-                <dt>Email</dt><dd>{{ request.session.email }}</dd>
-                <dt>Telepon</dt><dd>{{ pengguna.country_code }} {{ pengguna.mobile_number }}</dd>
-                <dt>Kewarganegaraan</dt><dd>{{ pengguna.kewarganegaraan }}</dd>
-                <dt>Tanggal Lahir</dt><dd>{{ pengguna.tanggal_lahir }}</dd>
+                <dt>Nama Lengkap</dt><dd>{{ nama_lengkap }}</dd>
+                <dt>Email</dt><dd>{{ email }}</dd>
+                <dt>Telepon</dt><dd>{{ telepon }}</dd>
+                <dt>Kewarganegaraan</dt><dd>{{ kewarganegaraan }}</dd>
+                <dt>Tanggal Lahir</dt><dd>{{ tanggal_lahir }}</dd>
             </dl>
         </div>
 
         <div class="card">
             <p class="section-title">Info Staf</p>
             <dl class="info-grid">
-                <dt>ID Staf</dt><dd>{{ staf.id_staf }}</dd>
-                <dt>Maskapai</dt><dd>{{ staf.maskapai }}</dd>
-                <dt>Kode Maskapai</dt><dd>{{ staf.kode_maskapai }}</dd>
+                <dt>ID Staf</dt><dd>{{ id_staf }}</dd>
+                <dt>Maskapai</dt><dd>{{ maskapai }}</dd>
+                <dt>Kode Maskapai</dt><dd>{{ kode_maskapai }}</dd>
             </dl>
         </div>
     </div>
 
     <div class="stat-grid">
         <div class="card stat-card">
-            <p class="stat-number" style="color:#D97706">{{ staf.klaim_menunggu }}</p>
+            <p class="stat-number" style="color:#D97706">{{ klaim_menunggu }}</p>
             <p style="font-size:.85rem;color:var(--text-secondary);margin-top:.4rem">Klaim Menunggu</p>
         </div>
         <div class="card stat-card">
-            <p class="stat-number" style="color:#059669">{{ staf.klaim_disetujui }}</p>
+            <p class="stat-number" style="color:#059669">{{ klaim_disetujui }}</p>
             <p style="font-size:.85rem;color:var(--text-secondary);margin-top:.4rem">Klaim Disetujui</p>
         </div>
         <div class="card stat-card">
-            <p class="stat-number" style="color:#DC2626">{{ staf.klaim_ditolak }}</p>
+            <p class="stat-number" style="color:#DC2626">{{ klaim_ditolak }}</p>
             <p style="font-size:.85rem;color:var(--text-secondary);margin-top:.4rem">Klaim Ditolak</p>
         </div>
     </div>
