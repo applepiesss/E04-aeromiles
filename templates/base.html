@@ -265,7 +265,7 @@
                 <li><a href="#" class="btn-primary">Register</a></li>
         
             {% elif request.session.role == 'member' %}
-                <li><a href="#">Dashboard</a></li>
+                <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
                 <li><a href="#">Identitas Saya</a></li>
                 <li><a href="#">Klaim Miles</a></li>
                 <li><a href="#">Transfer Miles</a></li>
@@ -276,7 +276,7 @@
                 <li><a href="#">Logout</a></li>
         
             {% elif request.session.role == 'staff' %}
-                <li><a href="#">Dashboard</a></li>
+                <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
                 <li><a href="#">Kelola Member</a></li>
                 <li><a href="#">Kelola Klaim</a></li>
                 <li><a href="#">Kelola Hadiah</a></li>
