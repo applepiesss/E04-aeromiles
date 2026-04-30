@@ -23,5 +23,6 @@ urlpatterns = [
     path('members/', include('apps.members.urls')),
     path('miles/', include('apps.miles.urls')),
     path('rewards/', include('apps.rewards.urls')),
-    path('staf/', include('apps.staf.urls'))
+    path('staf/', include('apps.staf.urls')),
+    path('vendors/', include('apps.vendors.urls')),
 ]
