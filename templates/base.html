@@ -265,8 +265,8 @@
                 <li><a href="#" class="btn-primary">Register</a></li>
         
             {% elif request.session.role == 'member' %}
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">Identitas Saya</a></li>
+                <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
+                <li><a href="{% url 'members:identitas' %}" {% if request.path == '/members/identitas/' %}class="active"{% endif %}>Identitas Saya</a></li>
                 <li><a href="#">Klaim Miles</a></li>
                 <li><a href="#">Transfer Miles</a></li>
                 <li><a href="#">Redeem Hadiah</a></li>
@@ -276,8 +276,8 @@
                 <li><a href="#">Logout</a></li>
         
             {% elif request.session.role == 'staff' %}
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">Kelola Member</a></li>
+                <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
+                <li><a href="{% url 'members:kelola_member' %}" {% if request.path == '/members/kelola/' %}class="active"{% endif %}>Kelola Member</a></li>
                 <li><a href="#">Kelola Klaim</a></li>
                 <li><a href="http://127.0.0.1:8000/vendors/katalog_hadiah/">Kelola Hadiah</a></li>
                 <li><a href="http://127.0.0.1:8000/vendors/manajemen-mitra/">Kelola Mitra</a></li>
