@@ -277,7 +277,7 @@
         
             {% elif request.session.role == 'staff' %}
                 <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
-                <li><a href="#">Kelola Member</a></li>
+                <li><a href="{% url 'members:kelola_member' %}" {% if request.path == '/members/kelola/' %}class="active"{% endif %}>Kelola Member</a></li>
                 <li><a href="#">Kelola Klaim</a></li>
                 <li><a href="#">Kelola Hadiah</a></li>
                 <li><a href="#">Kelola Mitra</a></li>
