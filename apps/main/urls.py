@@ -10,4 +10,5 @@ urlpatterns = [
     path('change-password/', change_password, name='change_password'),
     path('login/', login_view, name='login'),
     path('dashboard/', dashboard, name='dashboard'),
+    path('vendors/', include('apps.vendors.urls')),
 ]
