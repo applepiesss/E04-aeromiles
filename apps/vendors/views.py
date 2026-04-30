@@ -3,4 +3,4 @@ from django.shortcuts import render
 # Create your views here.
 
 def daftar_hadiah(request):
-    return render(request, 'katalog_hadiah.html')
+    return render(request, 'coba.html')
