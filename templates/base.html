@@ -266,7 +266,7 @@
         
             {% elif request.session.role == 'member' %}
                 <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
-                <li><a href="#">Identitas Saya</a></li>
+                <li><a href="{% url 'members:identitas' %}" {% if request.path == '/members/identitas/' %}class="active"{% endif %}>Identitas Saya</a></li>
                 <li><a href="#">Klaim Miles</a></li>
                 <li><a href="#">Transfer Miles</a></li>
                 <li><a href="#">Redeem Hadiah</a></li>
@@ -277,7 +277,7 @@
         
             {% elif request.session.role == 'staff' %}
                 <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
-                <li><a href="#">Kelola Member</a></li>
+                <li><a href="{% url 'members:kelola_member' %}" {% if request.path == '/members/kelola/' %}class="active"{% endif %}>Kelola Member</a></li>
                 <li><a href="#">Kelola Klaim</a></li>
                 <li><a href="#">Kelola Hadiah</a></li>
                 <li><a href="#">Kelola Mitra</a></li>
