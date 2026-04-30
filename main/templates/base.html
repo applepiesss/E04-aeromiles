@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}AeroMiles{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+        --blue-primary:   #4A90E2;
+        --blue-hover:     #3B7AC4;
+        --blue-soft:      #7FB3FF;
+        --blue-light:     #A5C8FF;
+        --bg-tint:        #F0F7FF;
+        --bg-surface:     #E0EFFF;
+        --border:         #DBEAFE;
+        --white:          #FFFFFF;
+        --text-primary:   #1E3A5F;
+        --text-secondary: #3B5F8A;
+        --shadow-sm:      0 1px 3px rgba(74,144,226,.08), 0 1px 2px rgba(74,144,226,.06);
+        --shadow-md:      0 4px 16px rgba(74,144,226,.10), 0 2px 6px rgba(74,144,226,.07);
+        --radius-md:      0.75rem;
+        --radius-lg:      1rem;
+        --radius-xl:      1.25rem;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #F0F7FF 0%, #E0EFFF 50%, #F8FAFC 100%);
+            background-attachment: fixed;
+            color: var(--text-secondary);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .navbar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-brand {
+            display: flex; align-items: center; gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .navbar-brand .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #7FB3FF, #A5C8FF, #E0EFFF);
+            border-radius: 0.5rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .navbar-brand .logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: var(--text-primary);
+        }
+        
+        .navbar-brand .logo-text span {
+            background: linear-gradient(135deg, #4A90E2, #7FB3FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .navbar-links {
+            display: flex; align-items: center; gap: 0.25rem;
+            list-style: none;
+        }
+
+        .navbar-links a {
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 0.5rem 0.875rem;
+            border-radius: var(--radius-md);
+            transition: background .15s, color .15s;
+        }
+
+        .navbar-links a:hover,
+        .navbar-links a.active {
+            background: var(--bg-surface);
+            color: var(--blue-primary);
+        }
+
+        .navbar-links .btn-logout {
+            background: var(--bg-tint);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.5rem 0.875rem;
+            border-radius: var(--radius-md);
+            transition: background .15s, color .15s;
+        }
+
+        .navbar-links .btn-logout:hover {
+            background: #FEE2E2;
+            border-color: #FECACA;
+            color: #DC2626;
+        }
+
+        .navbar-links .btn-primary {
+            color: #FFFFFF !important;
+        }
+        
+        .navbar-links .btn-primary:hover {
+            color: #FFFFFF !important;
+        }
+
+        .page-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 4px 24px rgba(74,144,226,.12), 0 1px 4px rgba(74,144,226,.08);
+            padding: 2rem;
+        }
+
+        .btn-primary {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.4rem;
+            background: var(--blue-primary);
+            color: var(--white);
+            border: none; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600;
+            padding: 0.65rem 1.5rem;
+            border-radius: var(--radius-md);
+            transition: background .15s, transform .1s;
+            text-decoration: none;
+        }
+        .btn-primary:hover { background: var(--blue-hover); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary.full-width { width: 100%; }
+
+        .btn-secondary {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.4rem;
+            background: var(--bg-surface);
+            color: var(--blue-primary);
+            border: 1px solid var(--border); cursor: pointer;
+            font-size: 0.9rem; font-weight: 600;
+            padding: 0.65rem 1.5rem;
+            border-radius: var(--radius-md);
+            transition: background .15s;
+            text-decoration: none;
+        }
+        .btn-secondary:hover { background: var(--blue-light); }
+
+        .form-group { margin-bottom: 1.25rem; }
+
+        .form-label {
+            display: block;
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            background: var(--white);
+            transition: border-color .15s, box-shadow .15s;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 3px rgba(74,144,226,.15);
+        }
+
+        .form-control::placeholder { color: #94A3B8; }
+
+        select.form-control { appearance: none; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .alert {
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+        }
+        .alert-error {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #B91C1C;
+        }
+        .alert-success {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            color: #166534;
+        }
+        .alert ul { margin-left: 1.25rem; }
+        .alert ul li { margin-top: 0.25rem; }
+
+        .divider {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin: 1.5rem 0; color: #94A3B8; font-size: 0.8rem;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1;
+            border-top: 1px solid var(--border);
+        }
+
+        h1,h2,h3 { color: var(--text-primary); }
+
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.85rem; }
+        .text-muted { color: var(--text-secondary); }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+
+        a { color: var(--blue-primary); }
+        a:hover { color: var(--blue-hover); }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+    </head>
+    <body>
+
+    <nav class="navbar">
+        <div class="navbar-inner">
+        <a class="navbar-brand" href="{% url 'main:show_main' %}">
+            <span class="logo-text">Aero<span>Miles</span></span>
+        </a>
+
+        <ul class="navbar-links">
+            {% if not request.session.role %}
+                <li><a href="#">Login</a></li>
+                <li><a href="#" class="btn-primary">Register</a></li>
+        
+            {% elif request.session.role == 'member' %}
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Identitas Saya</a></li>
+                <li><a href="#">Klaim Miles</a></li>
+                <li><a href="#">Transfer Miles</a></li>
+                <li><a href="#">Redeem Hadiah</a></li>
+                <li><a href="#">Beli Package</a></li>
+                <li><a href="#">Info Tier</a></li>
+                <li><a href="#">Profil</a></li>
+                <li><a href="#">Logout</a></li>
+        
+            {% elif request.session.role == 'staff' %}
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Kelola Member</a></li>
+                <li><a href="#">Kelola Klaim</a></li>
+                <li><a href="#">Kelola Hadiah</a></li>
+                <li><a href="#">Kelola Mitra</a></li>
+                <li><a href="#">Laporan Transaksi</a></li>
+                <li><a href="#">Profil</a></li>
+                <li><a href="#">Logout</a></li>
+            {% endif %}
+        </ul>
+
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+</body>
+</html>
