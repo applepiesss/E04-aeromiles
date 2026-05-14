@@ -9,12 +9,6 @@ def dictfetchall(cursor):
 
 # Create your views here.
 
-def daftar_hadiah(request):
-    request.session['role'] = 'staff'
-
-    request.session['username'] = 'Staf Admin'
-    return render(request, 'manajemen_hadiah_penyedia.html')
-
 def manage_mitra_view(request):
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -83,7 +77,7 @@ def daftar_hadiah(request):
             FROM HADIAH h
             LEFT JOIN MITRA m ON h.id_penyedia = m.id_penyedia
             LEFT JOIN MASKAPAI mas ON h.id_penyedia = mas.id_penyedia
-            ORDER BY h.kode_hadiah DESC
+            ORDER BY h.kode_hadiah asc
         """)
         rewards = dictfetchall(cursor)
 
@@ -127,4 +121,34 @@ def delete_hadiah(request):
             cursor.execute("DELETE FROM HADIAH WHERE kode_hadiah = %s", [kode])
             messages.success(request, "Hadiah berhasil dihapus.")
             
+    return redirect('vendors:daftar_hadiah')
+
+
+def save_hadiah(request):
+    if request.method == 'POST':
+        kode = request.POST.get('kode')
+        nama = request.POST.get('nama')
+        vendor_id = request.POST.get('vendor')
+        miles = request.POST.get('miles')
+        desc = request.POST.get('desc')
+        start = request.POST.get('start')
+        end = request.POST.get('end')
+
+        with connection.cursor() as cursor:
+            if kode: 
+                # Update
+                cursor.execute("""
+                    UPDATE HADIAH 
+                    SET nama=%s, miles=%s, deskripsi=%s, valid_start_date=%s, program_end=%s, id_penyedia=%s
+                    WHERE kode_hadiah=%s
+                """, [nama, miles, desc, start, end, vendor_id, kode])
+                messages.success(request, "Data Hadiah berhasil diupdate.")
+            else: 
+                # Create (Kode hadiah di-generate otomatis oleh trigger di postgres)
+                cursor.execute("""
+                    INSERT INTO HADIAH (nama, miles, deskripsi, valid_start_date, program_end, id_penyedia)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, [nama, miles, desc, start, end, vendor_id])
+                messages.success(request, "Hadiah baru berhasil ditambahkan.")
+                
     return redirect('vendors:daftar_hadiah')
