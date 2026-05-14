@@ -88,6 +88,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+agent.md
 # mkdocs documentation
 /site
 # mypy
@@ -112,4 +113,5 @@ GitHub.sublime-settings
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.history
+.history__pycache__/
+*.pyc

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -19,6 +20,7 @@ load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -41,7 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main',
+    'django.contrib.humanize',
+    'apps.main',
+    'apps.members',
+    'apps.miles',
+    'apps.vendors',
 ]
 
 MIDDLEWARE = [
@@ -59,7 +65,7 @@ ROOT_URLCONF = 'aeromiles.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,7 +84,20 @@ WSGI_APPLICATION = 'aeromiles.wsgi.application'
 
 # Database configuration
 if PRODUCTION:
-    # Production: gunakan PostgreSQL dengan kredensial dari environment variables
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('PROD_DB_NAME'),
+            'USER': os.getenv('PROD_DB_USER'),
+            'PASSWORD': os.getenv('PROD_DB_PASSWORD'),
+            'HOST': os.getenv('PROD_DB_HOST'),
+            'PORT': os.getenv('PROD_DB_PORT', '5432'),
+            'OPTIONS': {
+                'sslmode': 'require', 
+            },
+        }
+    }
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -86,18 +105,7 @@ if PRODUCTION:
             'USER': os.getenv('DB_USER'),
             'PASSWORD': os.getenv('DB_PASSWORD'),
             'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
-            'OPTIONS': {
-                'options': f"-c search_path={os.getenv('SCHEMA', 'public')}"
-            }
-        }
-    }
-else:
-    # Development: gunakan SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'PORT': os.getenv('DB_PORT', '5432'),
         }
     }
 
@@ -134,3 +142,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
