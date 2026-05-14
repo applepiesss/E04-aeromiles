@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from main.views import show_main, profile_settings, change_password
 from .views import show_main, login_view, dashboard
 
