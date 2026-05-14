@@ -88,6 +88,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+agent.md
 # mkdocs documentation
 /site
 # mypy
