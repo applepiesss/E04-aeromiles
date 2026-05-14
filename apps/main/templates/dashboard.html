@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard – AeroMiles{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dash-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .stat-grid  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+
+    .info-grid { display: grid; grid-template-columns: 160px 1fr; gap: .5rem 1rem; }
+    .info-grid dt { font-weight: 600; color: var(--text-primary); font-size: .85rem; }
+    .info-grid dd { color: var(--text-secondary); font-size: .875rem; }
+
+    .section-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.25rem; }
+
+    .badge-tier { padding: .25rem .65rem; border-radius: 999px; font-size: .75rem; font-weight: 600; display: inline-block; }
+    .badge-TIR-BLU { background: #DBEAFE; color: #1E40AF; }
+    .badge-TIR-SLV { background: #F1F5F9; color: #475569; }
+    .badge-TIR-GLD { background: #FEF9C3; color: #854D0E; }
+    .badge-TIR-PLT { background: #F3E8FF; color: #7C3AED; }
+
+    .miles-total { font-size: 1.6rem; font-weight: 700; color: var(--blue-primary); }
+    .miles-sub   { font-size: .8rem; color: var(--text-secondary); margin-top: .15rem; }
+    .miles-pos   { color: #059669; font-weight: 600; }
+    .miles-neg   { color: #DC2626; font-weight: 600; }
+
+    .stat-card   { text-align: center; padding: 1.75rem 1rem; }
+    .stat-number { font-size: 2.5rem; font-weight: 700; line-height: 1; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: .75rem 1rem; font-size: .8rem; font-weight: 600; color: var(--text-primary); text-align: left; border-bottom: 1px solid var(--border); }
+    tbody td  { padding: .75rem 1rem; font-size: .875rem; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--bg-tint); }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+    .page-header h1 {
+        font-size: 1.875rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    .page-header p {
+        font-size: 1.125rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>Selamat datang, {{ nama_lengkap }}</p>
+    </div>
+
+{% if role == 'member' %}
+
+    <div class="dash-grid">
+        <div class="card">
+            <p class="section-title">Informasi Pribadi</p>
+            <dl class="info-grid">
+                <dt>Nama Lengkap</dt><dd>{{ nama_lengkap }}</dd>
+                <dt>Email</dt><dd>{{ email }}</dd>
+                <dt>Telepon</dt><dd>{{ telepon }}</dd>
+                <dt>Kewarganegaraan</dt><dd>{{ kewarganegaraan }}</dd>
+                <dt>Tanggal Lahir</dt><dd>{{ tanggal_lahir }}</dd>
+            </dl>
+        </div>
+
+        <div class="card">
+            <p class="section-title">Keanggotaan</p>
+            <dl class="info-grid">
+                <dt>Nomor Member</dt><dd>{{ nomor_member }}</dd>
+                <dt>Tier</dt>
+                <dd><span class="badge-tier badge-{{ id_tier }}">{{ tier }}</span></dd>
+                <dt>Bergabung</dt><dd>{{ tanggal_bergabung }}</dd>
+                <dt>Total Miles</dt>
+                <dd>
+                    <span class="miles-total">{{ total_miles|intcomma }}</span>
+                    <p class="miles-sub">Award Miles: {{ award_miles|intcomma }}</p>
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card">
+        <p class="section-title">Transaksi Terbaru</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Jenis</th>
+                    <th>Keterangan</th>
+                    <th style="text-align:right">Miles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ tx.tanggal }}</td>
+                    <td>{{ tx.jenis }}</td>
+                    <td>{{ tx.keterangan }}</td>
+                    <td style="text-align:right">
+                        {% if tx.jumlah > 0 %}
+                            <span class="miles-pos">+{{ tx.jumlah|intcomma }}</span>
+                        {% else %}
+                            <span class="miles-neg">{{ tx.jumlah|intcomma }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align:center;color:var(--text-secondary)">Belum ada transaksi.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% elif role == 'staff' %}
+
+    <div class="dash-grid">
+        <div class="card">
+            <p class="section-title">Informasi Pribadi</p>
+            <dl class="info-grid">
+                <dt>Nama Lengkap</dt><dd>{{ nama_lengkap }}</dd>
+                <dt>Email</dt><dd>{{ email }}</dd>
+                <dt>Telepon</dt><dd>{{ telepon }}</dd>
+                <dt>Kewarganegaraan</dt><dd>{{ kewarganegaraan }}</dd>
+                <dt>Tanggal Lahir</dt><dd>{{ tanggal_lahir }}</dd>
+            </dl>
+        </div>
+
+        <div class="card">
+            <p class="section-title">Info Staf</p>
+            <dl class="info-grid">
+                <dt>ID Staf</dt><dd>{{ id_staf }}</dd>
+                <dt>Maskapai</dt><dd>{{ maskapai }}</dd>
+                <dt>Kode Maskapai</dt><dd>{{ kode_maskapai }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="stat-grid">
+        <div class="card stat-card">
+            <p class="stat-number" style="color:#D97706">{{ klaim_menunggu }}</p>
+            <p style="font-size:.85rem;color:var(--text-secondary);margin-top:.4rem">Klaim Menunggu</p>
+        </div>
+        <div class="card stat-card">
+            <p class="stat-number" style="color:#059669">{{ klaim_disetujui }}</p>
+            <p style="font-size:.85rem;color:var(--text-secondary);margin-top:.4rem">Klaim Disetujui</p>
+        </div>
+        <div class="card stat-card">
+            <p class="stat-number" style="color:#DC2626">{{ klaim_ditolak }}</p>
+            <p style="font-size:.85rem;color:var(--text-secondary);margin-top:.4rem">Klaim Ditolak</p>
+        </div>
+    </div>
+
+{% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Registrasi – AeroMiles{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" style="display:flex; align-items:center; justify-content:center; padding-top:2rem; padding-bottom:4rem;">
+    <div style="width:100%; max-width:560px;">
+        
+        <div class="card">
+            <div class="text-center" style="margin-bottom: 2rem;">
+                <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">Daftar Akun Baru</h1>
+                <p class="text-muted text-sm">Bergabung dengan AeroMiles hari ini</p>
+            </div>
+
+            {% if errors %}
+            <div class="alert alert-error">
+                <ul style="margin-bottom:0;">
+                    {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'main:register' %}" id="regForm">
+                {% csrf_token %}
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; border: 1.5px solid var(--border); border-radius: var(--radius-md); overflow:hidden; margin-bottom:1.5rem; background: var(--bg-tint);">
+                    <button type="button" id="btnMember"
+                        onclick="setRole('member')"
+                        style="padding: 0.75rem; font-weight: 600; font-size: 0.875rem; border: none; cursor: pointer; transition: all 0.2s;">
+                        Member
+                    </button>
+                    <button type="button" id="btnStaff"
+                        onclick="setRole('staff')"
+                        style="padding: 0.75rem; font-weight: 600; font-size: 0.875rem; border: none; cursor: pointer; transition: all 0.2s;">
+                        Staf Maskapai
+                    </button>
+                </div>
+                <input type="hidden" name="role" id="roleInput" value="{{ role }}">
+
+                <div class="form-group">
+                    <label class="form-label">Email <span style="color:#DC2626">*</span></label>
+                    <input type="email" name="email" class="form-control"
+                            placeholder="nama@email.com" value="{{ form.email|default:'' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Password <span style="color:#DC2626">*</span></label>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Konfirmasi Password <span style="color:#DC2626">*</span></label>
+                        <input type="password" name="confirm_password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1rem; font-weight: 700; margin: 1.5rem 0 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">Informasi Pribadi</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Salutation <span style="color:#DC2626">*</span></label>
+                    <select name="salutation" class="form-control" required>
+                        <option value="">Pilih</option>
+                        {% for s in 'Mr.,Mrs.,Ms.,Dr.'|split:',' %}
+                        <option value="{{ s }}" {% if form.salutation == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nama Depan & Tengah <span style="color:#DC2626">*</span></label>
+                    <input type="text" name="first_mid_name" class="form-control"
+                            placeholder="Nama Lengkap" value="{{ form.first_mid_name|default:'' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nama Belakang <span style="color:#DC2626">*</span></label>
+                        <input type="text" name="last_name" class="form-control"
+                            placeholder="Nama Keluarga" value="{{ form.last_name|default:'' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kewarganegaraan <span style="color:#DC2626">*</span></label>
+                        <input type="text" name="kewarganegaraan" class="form-control"
+                            placeholder="Contoh: Indonesia" value="{{ form.kewarganegaraan|default:'' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div style="flex: 0 0 120px;" class="form-group">
+                        <label class="form-label">Kode Negara</label>
+                        <input type="text" name="country_code" class="form-control"
+                            placeholder="+62" value="{{ form.country_code|default:'' }}" required>
+                    </div>
+                    <div style="flex: 1;" class="form-group">
+                        <label class="form-label">Nomor HP <span style="color:#DC2626">*</span></label>
+                        <input type="text" name="mobile_number" class="form-control"
+                            placeholder="812xxxxxxx" value="{{ form.mobile_number|default:'' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tanggal Lahir <span style="color:#DC2626">*</span></label>
+                    <input type="date" name="tanggal_lahir" id="birthDate" class="form-control"
+                            value="{{ form.tanggal_lahir|default:'' }}" required>
+                </div>
+
+                <div id="staffFields" style="display:none;">
+                    <h3 style="font-size: 1rem; font-weight: 700; margin: 1.5rem 0 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">Detail Maskapai</h3>
+                    <div class="form-group">
+                        <label class="form-label">Kode Maskapai <span style="color:#DC2626">*</span></label>
+                        <select name="kode_maskapai" class="form-control" id="maskapaiSelect">
+                            <option value="">Pilih maskapai tempat Anda bekerja</option>
+                            {% for k, info in maskapai_list %}
+                            <option value="{{ k }}" {% if form.kode_maskapai == k %}selected{% endif %}>{{ k }} – {{ info.nama_maskapai }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary full-width" style="margin-top: 1.5rem; padding: 0.875rem;">
+                    Daftar Sekarang
+                </button>
+            </form>
+
+            <p class="text-center text-sm mt-3">
+                Sudah punya akun? <a href="{% url 'main:login' %}" style="font-weight: 600;">Masuk di sini</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function setRole(r) {
+    document.getElementById('roleInput').value = r;
+    var isMember = r === 'member';
+    document.getElementById('staffFields').style.display = isMember ? 'none' : 'block';
+    document.getElementById('maskapaiSelect').required = !isMember;
+
+    const btnMember = document.getElementById('btnMember');
+    const btnStaff = document.getElementById('btnStaff');
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('birthDate').setAttribute('max', today);
+
+    if (isMember) {
+        btnMember.style.background = 'var(--blue-primary)';
+        btnMember.style.color = '#fff';
+        btnMember.style.boxShadow = 'var(--shadow-sm)';
+        btnStaff.style.background = 'transparent';
+        btnStaff.style.color = 'var(--text-secondary)';
+        btnStaff.style.boxShadow = 'none';
+    } else {
+        btnStaff.style.background = 'var(--blue-primary)';
+        btnStaff.style.color = '#fff';
+        btnStaff.style.boxShadow = 'var(--shadow-sm)';
+        btnMember.style.background = 'transparent';
+        btnMember.style.color = 'var(--text-secondary)';
+        btnMember.style.boxShadow = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    setRole('{{ role|default:"member" }}');
+
+    const today = new Date().toISOString().split('T')[0];
+    const birthDateInput = document.getElementById('birthDate');
+    if (birthDateInput) {
+        birthDateInput.setAttribute('max', today);
+    }
+});
+</script>
+{% endblock %}
