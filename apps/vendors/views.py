@@ -119,3 +119,12 @@ def daftar_hadiah(request):
         'rewards': rewards, 
         'vendors': vendors
     })
+
+def delete_hadiah(request):
+    if request.method == 'POST':
+        kode = request.POST.get('kode')
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM HADIAH WHERE kode_hadiah = %s", [kode])
+            messages.success(request, "Hadiah berhasil dihapus.")
+            
+    return redirect('vendors:daftar_hadiah')
