@@ -30,9 +30,12 @@ SECRET_KEY = 'django-insecure-*#*lmy@g)nd*gr*p!s=125wtaf%if(6jtse-=jk_=hmr%i85tb
 
 # SECURITY WARNING: don't run with debug turned on in production!
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
-DEBUG = True
+if PRODUCTION :
+    DEBUG = False
+else:
+    DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "e04-aeromiles.vercel.app"]
 
 # Application definition
 
