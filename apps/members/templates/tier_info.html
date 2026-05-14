@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}Informasi Tier - AeroMiles{% endblock %}
+
+{% block content %}
+<div class="tier-container">
+    <!-- Header Section -->
+    <div class="tier-header">
+        <div class="tier-header-content">
+            <h1>Informasi Tier</h1>
+            <p class="tier-subtitle">Pelajari tentang tier AeroMiles dan keuntungan eksklusif setiap level</p>
+        </div>
+    </div>
+
+    <!-- Member Current Status -->
+    <div class="member-status-card">
+        <div class="status-content">
+            <div class="status-left">
+                <h2 class="member-name">{{ member.name }}</h2>
+                <div class="current-tier-badge">
+                    {% for tier in tiers %}
+                        {% if tier.is_current %}
+                            <span class="tier-badge-{{ tier.nama|lower }}">{{ tier.nama }}</span>
+                            <p class="status-text">Tier Anda saat ini</p>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="status-right">
+                <div class="status-stat">
+                    <span class="stat-value">{{ member.current_miles }}</span>
+                    <span class="stat-label">Miles Saat Ini</span>
+                </div>
+                <div class="status-stat">
+                    <span class="stat-value">{{ member.current_flights }}</span>
+                    <span class="stat-label">Penerbangan</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Miles Upgrade Card -->
+    {% for tier in tiers %}
+        {% if tier.is_current and tier.miles_to_next %}
+        <div class="upgrade-card">
+            <div class="upgrade-card-content">
+                <div class="upgrade-left">
+                    <h3 class="upgrade-title">Miles untuk Upgrade ke {{ tier.next_tier_name }}</h3>
+                    <p class="upgrade-description">Tingkatkan tier Anda dengan mengumpulkan miles lebih banyak</p>
+                </div>
+                <div class="upgrade-right">
+                    <div class="miles-needed-large">
+                        <span class="miles-value">{{ tier.miles_to_next }}</span>
+                        <span class="miles-label">miles lagi</span>
+                    </div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <!-- 
+                    Progress = current / (current + miles_to_next) * 100
+                    Gunakan widthratio: widthratio current (current+to_next) 100
+                    Karena Django tidak bisa tambah dua variabel langsung,
+                    kita hitung via data attribute dan JS di bawah.
+                -->
+                <div class="miles-progress-large"
+                     data-current="{{ member.current_miles }}"
+                     data-remaining="{{ tier.miles_to_next }}">
+                    <div class="progress-fill-large" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text">
+                    <span>{{ member.current_miles }} miles</span>
+                    <span>{{ tier.miles_to_next }} miles lagi</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Tiers Grid -->
+    <div class="tiers-section">
+        <h2 class="section-title">Semua Tier Membership</h2>
+        <div class="tiers-grid">
+            {% for tier in tiers %}
+            <div class="tier-card {% if tier.is_current %}tier-card-current{% endif %}">
+                {% if tier.is_current %}
+                <div class="current-badge">TIER ANDA</div>
+                {% endif %}
+
+                <!-- Top row: name + requirements side by side -->
+                <div class="tier-top-row">
+                    <div class="tier-name-badge tier-badge-{{ tier.nama|lower }}">
+                        {{ tier.nama }}
+                    </div>
+                    <div class="tier-requirements">
+                        <div class="requirement-single">
+                            <div class="requirement-label-single">
+                                <svg class="requirement-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Penerbangan
+                            </div>
+                            <span class="requirement-value">{{ tier.minimal_frekuensi_terbang }}</span>
+                        </div>
+                        <div class="requirement-single">
+                            <div class="requirement-label-single">
+                                <svg class="requirement-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Miles
+                            </div>
+                            <span class="requirement-value">{{ tier.minimal_tier_miles }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefits -->
+                <div class="tier-benefits">
+                    <div class="benefits-title">Keuntungan Tier</div>
+                    <ul class="benefits-list">
+                        {% for benefit in tier.benefits %}
+                        <li class="benefit-item">
+                            <span class="benefit-emoji">{{ benefit.icon }}</span>
+                            <span class="benefit-text">{{ benefit.text }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.miles-progress-large[data-current][data-remaining]').forEach(function (bar) {
+            var current = parseFloat(bar.dataset.current) || 0;
+            var remaining = parseFloat(bar.dataset.remaining) || 0;
+            var total = current + remaining;
+            var pct = total > 0 ? Math.min((current / total) * 100, 100) : 0;
+            var fill = bar.querySelector('.progress-fill-large');
+            if (fill) fill.style.width = pct.toFixed(1) + '%';
+        });
+    });
+</script>
+
+<style>
+    .tier-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    .tier-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .tier-header h1 {
+        font-size: 2rem;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        font-weight: 700;
+    }
+
+    .tier-subtitle {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Member Status Card */
+    .member-status-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.25rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .status-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .status-left {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .member-name {
+        font-size: 1.25rem;
+        color: var(--text-primary);
+        margin: 0 0 0.4rem 0;
+        font-weight: 600;
+    }
+
+    .current-tier-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .tier-badge-blue {
+        display: inline-block;
+        background: #E3F2FD;
+        color: #1565C0;
+        padding: 0.25rem 0.875rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .tier-badge-silver {
+        display: inline-block;
+        background: #F5F5F5;
+        color: #616161;
+        padding: 0.25rem 0.875rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .tier-badge-gold {
+        display: inline-block;
+        background: #FFF3E0;
+        color: #E65100;
+        padding: 0.25rem 0.875rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .tier-badge-platinum {
+        display: inline-block;
+        background: #F3E5F5;
+        color: #6A1B9A;
+        padding: 0.25rem 0.875rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .status-text {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .status-right {
+        display: flex;
+        gap: 2rem;
+        flex: 0 0 auto;
+    }
+
+    .status-stat {
+        text-align: center;
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--blue-primary);
+        margin-bottom: 0.1rem;
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Upgrade Card */
+    .upgrade-card {
+        background: linear-gradient(135deg, #4A90E2 0%, #7FB3FF 100%);
+        border-radius: var(--radius-xl);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.25rem;
+        color: var(--white);
+        box-shadow: var(--shadow-md);
+    }
+
+    .upgrade-card-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .upgrade-left {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .upgrade-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 0.2rem 0;
+        color: var(--white);
+    }
+
+    .upgrade-description {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    .upgrade-right {
+        flex: 0 0 auto;
+    }
+
+    .miles-needed-large {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 0.6rem 1.25rem;
+        border-radius: var(--radius-lg);
+        backdrop-filter: blur(10px);
+    }
+
+    .miles-value {
+        display: block;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 0.05rem;
+    }
+
+    .miles-label {
+        display: block;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+    }
+
+    .miles-progress-large {
+        background: rgba(255, 255, 255, 0.25);
+        height: 8px;
+        border-radius: 9999px;
+        overflow: hidden;
+        margin-bottom: 0.4rem;
+    }
+
+    .progress-fill-large {
+        height: 100%;
+        background: var(--white);
+        border-radius: 9999px;
+        transition: width 0.6s ease;
+    }
+
+    .progress-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
+
+    /* Tiers Section */
+    .tiers-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        color: var(--text-primary);
+        margin-bottom: 0.875rem;
+        font-weight: 600;
+    }
+
+    .tiers-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    /* Tier Card */
+    .tier-card {
+        background: var(--white);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 0.875rem 1.25rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .tier-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--blue-primary);
+    }
+
+    .tier-card-current {
+        border: 2px solid var(--blue-primary);
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.05) 0%, rgba(127, 179, 255, 0.05) 100%);
+        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.08);
+    }
+
+    .current-badge {
+        position: absolute;
+        top: -10px;
+        right: 16px;
+        background: var(--blue-primary);
+        color: var(--white);
+        padding: 0.2rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Top row: name badge + requirements inline */
+    .tier-top-row {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .tier-name-badge {
+        display: inline-block;
+        padding: 0.35rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    .tier-requirements {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .requirement-single {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+
+    .requirement-label-single {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+    }
+
+    .requirement-icon {
+        width: 13px;
+        height: 13px;
+        color: var(--blue-primary);
+        flex-shrink: 0;
+    }
+
+    .requirement-value {
+        font-weight: 700;
+        color: var(--blue-primary);
+        font-size: 1rem;
+    }
+
+    /* Benefits */
+    .tier-benefits {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .benefits-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.4rem;
+    }
+
+    .benefits-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem 2rem;
+    }
+
+    .benefit-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.15rem 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+
+    .benefit-emoji {
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    .benefit-text {
+        flex: 1;
+    }
+
+    @media (max-width: 768px) {
+        .tier-container {
+            padding: 1.5rem 1rem;
+        }
+
+        .tier-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .status-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .status-right {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .upgrade-card-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .tier-top-row {
+            gap: 1rem;
+        }
+
+        .tier-requirements {
+            gap: 1.5rem;
+        }
+
+        .benefits-list {
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,5 +1,6 @@
 from django.urls import path
 from apps.miles.views import claim_approve, claim_create, claim_delete, claim_edit, claim_member_list, claim_reject, claim_staff_list, transfer_create, transfer_list
+from .views import buy_miles_package, process_buy_package
 
 app_name = 'miles'
 
@@ -15,4 +16,6 @@ urlpatterns = [
 
     path('transfer/', transfer_list, name='transfer_list'),
     path('transfer/create/', transfer_create, name='transfer_create'),
+    path('buy-miles-package/', buy_miles_package, name='buy_miles_package'),
+    path('process-buy-package/', process_buy_package, name='process_buy_package'),
 ]
