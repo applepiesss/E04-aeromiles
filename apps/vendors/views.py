@@ -29,3 +29,20 @@ def manage_mitra_view(request):
             p['tanggal_kerja_sama_iso'] = p['tanggal_kerja_sama'].strftime('%Y-%m-%d')
             
     return render(request, 'manajemen_mitra.html', {'partners': partners})
+
+def save_mitra(request):
+    if request.method == 'POST':
+        is_update = request.POST.get('is_update') == 'true'
+        email = request.POST.get('email')
+        nama = request.POST.get('nama')
+        join_date = request.POST.get('join_date')
+        
+    with connection.cursor() as cursor:
+        if is_update:
+            cursor.execute("""
+                UPDATE MITRA
+                SET nama_mitra = %s, tanggal_kerja_sama = %s
+                WHERE email_mitra = %s
+            """, [nama, join_date, email])
+
+    return redirect('vendors:manage_mitra')
