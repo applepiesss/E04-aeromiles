@@ -9,6 +9,8 @@ urlpatterns = [
     path('profile-settings/', profile_settings, name='profile_settings'),
     path('change-password/', change_password, name='change_password'),
     path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('register/', register_view, name='register'),
     path('dashboard/', dashboard, name='dashboard'),
     path('vendors/', include('apps.vendors.urls')),
 ]

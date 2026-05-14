@@ -105,6 +105,7 @@ def change_password(request):
     return redirect('main:profile_settings' + ('?type=staff' if user_type == 'staff' else ''))
 import datetime
 from django.shortcuts import redirect, render
+from django.contrib import messages
 
 _BULAN = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
 
@@ -187,6 +188,28 @@ DUMMY_HADIAH = {
     'RWD-012': {'nama': 'Voucher Spa & Pijat 90 Menit', 'miles': 2200},
 }
 
+DUMMY_MASKAPAI = {
+    'GA': {
+        'nama_maskapai': 'Garuda Indonesia',
+        'id_penyedia': 1
+    },
+    'QG': {
+        'nama_maskapai': 'Citilink',
+        'id_penyedia': 2
+    },
+    'JT': {
+        'nama_maskapai': 'Lion Air',
+        'id_penyedia': 3
+    },
+    'SJ': {
+        'nama_maskapai': 'Sriwijaya Air',
+        'id_penyedia': 4
+    },
+    'ID': {
+        'nama_maskapai': 'Batik Air',
+        'id_penyedia': 5
+    }
+}
 DUMMY_REDEEM = [
     {
         'email_member': 'judy.hopps@yahoo.com',
@@ -321,6 +344,77 @@ def login_view(request):
         return render(request, 'login.html', {'error': error, 'email': email})
 
     return render(request, 'login.html')
+
+def logout_view(request):
+    request.session.flush()
+    return redirect('main:login')
+
+def register_view(request):
+    if request.session.get('email'):
+        return redirect('main:dashboard')
+
+    maskapai_items = DUMMY_MASKAPAI.items()
+
+    if request.method == 'POST':
+        role = request.POST.get('role', 'member')
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+        salutation = request.POST.get('salutation', '').strip()
+        first_mid_name = request.POST.get('first_mid_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        country_code = request.POST.get('country_code', '').strip()
+        mobile_number = request.POST.get('mobile_number', '').strip()
+        tanggal_lahir = request.POST.get('tanggal_lahir', '').strip()
+        kewarganegaraan = request.POST.get('kewarganegaraan', '').strip()
+        kode_maskapai = request.POST.get('kode_maskapai', '').strip()
+
+        errors = []
+
+        required = [email, password, confirm_password, salutation,
+                    first_mid_name, last_name, country_code,
+                    mobile_number, tanggal_lahir, kewarganegaraan]
+        
+        if any(not f for f in required):
+            errors.append('Semua field wajib diisi.')
+
+        if password != confirm_password:
+            errors.append('Password dan konfirmasi password tidak sama.')
+
+        if role == 'staff' and not kode_maskapai:
+            errors.append('Kode maskapai wajib dipilih untuk Staf.')
+        
+        if role == 'staff' and kode_maskapai and kode_maskapai not in DUMMY_MASKAPAI:
+            errors.append('Maskapai tidak valid.')
+
+        if salutation not in ('Mr.', 'Mrs.', 'Ms.', 'Dr.'):
+            errors.append('Salutation tidak valid.')
+
+        if country_code and not re.match(r'^\+\d+$', country_code):
+            errors.append('Kode negara harus diawali "+" diikuti angka (contoh: +62).')
+
+        if mobile_number and not mobile_number.isdigit():
+            errors.append('Nomor HP hanya boleh berisi angka.')
+
+        if mobile_number and not (9 <= len(mobile_number) <= 13):
+            errors.append('Nomor HP harus berjumlah 9 hingga 13 digit.')
+
+        if not errors:
+            messages.success(request, 'Registrasi berhasil! Silakan login.')
+            return redirect('main:login')
+
+        return render(request, 'register.html', {
+            'errors': errors,
+            'maskapai_list': maskapai_items, 
+            'role': role,
+            'form': request.POST,
+        })
+
+    return render(request, 'register.html', {
+        'maskapai_list': maskapai_items, 
+        'role': 'member',
+        'form': {},
+    })
 
 def dashboard(request):
     email = request.session.get('email')

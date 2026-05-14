@@ -9,7 +9,7 @@
         <div class="card">
             <div class="text-center" style="margin-bottom: 2rem;">
                 <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">Selamat Datang</h1>
-                <p class="text-muted text-sm">Masuk ke akun AeroMiles Anda untuk melanjutkan</p>
+                <p class="text-muted text-sm">Masuk ke akun AeroMiles Anda</p>
             </div>
 
             {% if error %}
@@ -42,12 +42,10 @@
                 </button>
             </form>
 
-            {% comment %} 
             <div class="divider">atau</div>
             <p class="text-center text-sm">
                 Belum punya akun? <a href="{% url 'main:register' %}" style="font-weight: 600;">Daftar di sini</a>
             </p> 
-            {% endcomment %}
         </div>
     </div>
 </div>
