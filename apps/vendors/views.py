@@ -72,3 +72,50 @@ def delete_mitra(request):
                 messages.success(request, "Mitra beserta hadiah yang terkait berhasil dihapus.")
                 
     return redirect('vendors:manage_mitra')
+
+
+def daftar_hadiah(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT h.kode_hadiah, h.nama, h.miles, h.deskripsi, 
+                    h.valid_start_date, h.program_end, h.id_penyedia,
+                    COALESCE(m.nama_mitra, mas.nama_maskapai) as nama_penyedia
+            FROM HADIAH h
+            LEFT JOIN MITRA m ON h.id_penyedia = m.id_penyedia
+            LEFT JOIN MASKAPAI mas ON h.id_penyedia = mas.id_penyedia
+            ORDER BY h.kode_hadiah DESC
+        """)
+        rewards = dictfetchall(cursor)
+
+        today = datetime.date.today()
+        for r in rewards:
+            r['valid_start_date_iso'] = r['valid_start_date'].strftime('%Y-%m-%d')
+            r['program_end_iso'] = r['program_end'].strftime('%Y-%m-%d')
+            r['valid_start_date_fmt'] = r['valid_start_date'].strftime('%d %b %Y')
+            r['program_end_fmt'] = r['program_end'].strftime('%d %b %Y')
+            
+            if today > r['program_end']:
+                r['status'] = 'expired'
+                r['status_text'] = 'Kadaluarsa'
+                r['badge_class'] = 'badge-inactive'
+            elif today < r['valid_start_date']:
+                r['status'] = 'upcoming'
+                r['status_text'] = 'Akan Datang'
+                r['badge_class'] = 'badge-inactive'
+            else:
+                r['status'] = 'active'
+                r['status_text'] = 'Aktif'
+                r['badge_class'] = 'badge-active'
+
+        cursor.execute("""
+            SELECT id_penyedia as id, nama_maskapai as nama FROM MASKAPAI
+            UNION
+            SELECT id_penyedia as id, nama_mitra as nama FROM MITRA
+            ORDER BY nama ASC
+        """)
+        vendors = dictfetchall(cursor)
+
+    return render(request, 'manajemen_hadiah_penyedia.html', {
+        'rewards': rewards, 
+        'vendors': vendors
+    })
