@@ -271,7 +271,9 @@
                 <li><a href="{% url 'miles:transfer_list' %}" {% if request.path == '/miles/transfer/' %}class="active"{% endif %}>Transfer Miles</a></li>
                 <li><a href="{% url 'members:identitas' %}" {% if request.path == '/members/identitas/' %}class="active"{% endif %}>Identitas Saya</a></li>
                 <li><a href="#">Redeem Hadiah</a></li>
-                <li><a href="{% url 'miles:buy_miles' %}">Beli Package</a></li>
+                {% comment %}
+    <li><a href="{% url 'miles:buy_miles' %}">Beli Package</a></li>
+{% endcomment %}
                 <li><a href="{% url 'members:tier_info' %}">Info Tier</a></li>
                 <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
