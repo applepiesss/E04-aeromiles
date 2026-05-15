@@ -270,10 +270,8 @@
                 <li><a href="{% url 'miles:claim_member_list' %}" {% if request.path == '/miles/claim/' %}class="active"{% endif %}>Klaim Miles</a></li>
                 <li><a href="{% url 'miles:transfer_list' %}" {% if request.path == '/miles/transfer/' %}class="active"{% endif %}>Transfer Miles</a></li>
                 <li><a href="{% url 'members:identitas' %}" {% if request.path == '/members/identitas/' %}class="active"{% endif %}>Identitas Saya</a></li>
-                <li><a href="#">Redeem Hadiah</a></li>
-                {% comment %}
-    <li><a href="{% url 'miles:buy_miles' %}">Beli Package</a></li>
-{% endcomment %}
+                <li><a href="{% url 'rewards:redeem_hadiah' %}">Redeem Hadiah</a></li>
+                <li><a href="{% url 'miles:buy_miles_package' %}">Beli Package</a></li>
                 <li><a href="{% url 'members:tier_info' %}">Info Tier</a></li>
                 <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
@@ -284,7 +282,7 @@
                 <li><a href="{% url 'members:kelola_member' %}" {% if request.path == '/members/kelola/' %}class="active"{% endif %}>Kelola Member</a></li>
                 <li><a href="http://127.0.0.1:8000/vendors/katalog_hadiah/">Kelola Hadiah</a></li>
                 <li><a href="http://127.0.0.1:8000/vendors/manajemen-mitra/">Kelola Mitra</a></li>
-                <li><a href="#">Laporan Transaksi</a></li>
+                <li><a href="{% url 'staf:laporan_transaksi' %}">Laporan Transaksi</a></li>
                 <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
             {% endif %}
