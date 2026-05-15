@@ -242,151 +242,134 @@ def transfer_create(request):
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from datetime import datetime
+from django.db import connection, DatabaseError
 
 
-# Hardcoded data for Award Miles Package
-AWARD_MILES_PACKAGE = [
-    {
-        'id': 'AMP-001',
-        'harga_paket': 150000.00,
-        'jumlah_award_miles': 1000,
-    },
-    {
-        'id': 'AMP-002',
-        'harga_paket': 650000.00,
-        'jumlah_award_miles': 5000,
-    },
-    {
-        'id': 'AMP-003',
-        'harga_paket': 1250000.00,
-        'jumlah_award_miles': 10000,
-    },
-    {
-        'id': 'AMP-004',
-        'harga_paket': 2800000.00,
-        'jumlah_award_miles': 25000,
-    },
-    {
-        'id': 'AMP-005',
-        'harga_paket': 5200000.00,
-        'jumlah_award_miles': 50000,
-    },
-]
+def dictfetchall(cursor):
+    """Convert database rows to list of dicts"""
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-# Member's current award miles balance
-MEMBER_AWARD_MILES = {
-    'MEM0001234': 0,  # john.doe@aeromiles.com
-}
 
-# Transaction history for buying award miles packages
-MEMBER_AWARD_MILES_PACKAGE = [
-    {
-        'id': 1,
-        'id_award_miles_package': 'AMP-001',
-        'email_member': 'john.doe@aeromiles.com',
-        'harga_paket': 150000.00,
-        'jumlah_award_miles': 1000,
-        'waktu': '2024-01-15 10:30:00',
-    },
-    {
-        'id': 2,
-        'id_award_miles_package': 'AMP-002',
-        'email_member': 'john.doe@aeromiles.com',
-        'harga_paket': 650000.00,
-        'jumlah_award_miles': 5000,
-        'waktu': '2024-02-20 14:15:00',
-    },
-    {
-        'id': 3,
-        'id_award_miles_package': 'AMP-001',
-        'email_member': 'john.doe@aeromiles.com',
-        'harga_paket': 150000.00,
-        'jumlah_award_miles': 1000,
-        'waktu': '2024-03-10 09:45:00',
-    },
-]
-
-# Member data for reference
-MEMBER_DATA = {
-    'type': 'member',
-    'salutation': 'Mr.',
-    'first_mid_name': 'John Michael',
-    'last_name': 'Doe',
-    'email': 'john.doe@aeromiles.com',
-    'country_code': '+1',
-    'phone_number': '555-0123',
-    'nationality': 'American',
-    'date_of_birth': '1990-05-15',
-    'member_number': 'MEM0001234',
-    'join_date': '2020-01-15',
-}
+def dictfetchone(cursor):
+    """Convert single database row to dict"""
+    columns = [col[0] for col in cursor.description]
+    row = cursor.fetchone()
+    return dict(zip(columns, row)) if row else None
 
 
 @require_http_methods(["GET"])
 def buy_miles_package(request):
     """Display award miles packages for purchase"""
-    # For mockup, use hardcoded member
-    member_id = 'MEM0001234'
-    current_award_miles = MEMBER_AWARD_MILES.get(member_id, 0)
+    email = request.session.get('email')
     
-    # Calculate total award miles from all transactions
-    for transaction in MEMBER_AWARD_MILES_PACKAGE:
-        if transaction['email_member'] == MEMBER_DATA['email']:
-            current_award_miles += transaction['jumlah_award_miles']
+    if not email or request.session.get('role') != 'member':
+        return redirect('main:login')
     
-    # Update in MEMBER_AWARD_MILES
-    MEMBER_AWARD_MILES[member_id] = current_award_miles
+    try:
+        # Fetch member's current award miles
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT award_miles, total_miles
+                FROM MEMBER
+                WHERE email = %s
+            """, [email])
+            member_data = dictfetchone(cursor)
+        
+        current_award_miles = member_data['award_miles'] if member_data else 0
+        
+        # Fetch all available packages
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, harga_paket, jumlah_award_miles
+                FROM AWARD_MILES_PACKAGE
+                ORDER BY jumlah_award_miles ASC
+            """)
+            packages = dictfetchall(cursor)
+        
+        # Fetch transaction history for this member
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    m.id_award_miles_package,
+                    m.email_member,
+                    m.timestamp,
+                    p.harga_paket,
+                    p.jumlah_award_miles
+                FROM MEMBER_AWARD_MILES_PACKAGE m
+                JOIN AWARD_MILES_PACKAGE p ON m.id_award_miles_package = p.id
+                WHERE m.email_member = %s
+                ORDER BY m.timestamp DESC
+            """, [email])
+            transaction_history = dictfetchall(cursor)
+        
+        # Format timestamps for display
+        for transaction in transaction_history:
+            if transaction['timestamp']:
+                transaction['waktu'] = transaction['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Fetch member name for display
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT salutation, first_mid_name, last_name
+                FROM PENGGUNA
+                WHERE email = %s
+            """, [email])
+            user_data = dictfetchone(cursor)
+        
+        member_name = f"{user_data['salutation']} {user_data['first_mid_name']} {user_data['last_name']}" if user_data else ""
+        
+        context = {
+            'current_award_miles': current_award_miles,
+            'packages': packages,
+            'transaction_history': transaction_history,
+            'member_name': member_name,
+            'member_email': email,
+        }
+        
+        return render(request, 'buy_miles_package.html', context)
     
-    # Get all available packages
-    packages = AWARD_MILES_PACKAGE.copy()
-    
-    # Get transaction history
-    history = [t for t in MEMBER_AWARD_MILES_PACKAGE if t['email_member'] == MEMBER_DATA['email']]
-    
-    context = {
-        'member_id': member_id,
-        'current_award_miles': current_award_miles,
-        'packages': packages,
-        'transaction_history': history,
-        'member_name': MEMBER_DATA['first_mid_name'] + ' ' + MEMBER_DATA['last_name'],
-        'member_email': MEMBER_DATA['email'],
-    }
-    
-    return render(request, 'buy_miles_package.html', context)
+    except DatabaseError as e:
+        messages.error(request, f'Terjadi kesalahan database: {str(e)}')
+        return render(request, 'buy_miles_package.html', {
+            'current_award_miles': 0,
+            'packages': [],
+            'transaction_history': [],
+        })
 
 
 @require_http_methods(["POST"])
 def process_buy_package(request):
     """Process award miles package purchase"""
-    member_id = 'MEM0001234'
-    paket_id = request.POST.get('paket_id', '')
+    email = request.session.get('email')
     
-    # Find package
-    package_found = None
-    for pkg in AWARD_MILES_PACKAGE:
-        if pkg['id'] == paket_id:
-            package_found = pkg
-            break
+    if not email or request.session.get('role') != 'member':
+        return redirect('main:login')
     
-    if not package_found:
-        messages.error(request, 'Paket tidak ditemukan.')
+    paket_id = request.POST.get('paket_id', '').strip()
+    
+    if not paket_id:
+        messages.error(request, 'Paket tidak valid.')
         return redirect('miles:buy_miles_package')
     
-    # Add to member's award miles
-    current_miles = MEMBER_AWARD_MILES.get(member_id, 0)
-    new_miles = current_miles + package_found['jumlah_award_miles']
-    MEMBER_AWARD_MILES[member_id] = new_miles
+    try:
+        # Call function to handle validation, insert, and return pesan
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT fn_buy_award_miles_package(%s, %s) as pesan
+            """, [paket_id, email])
+            result = dictfetchone(cursor)
+            pesan = result['pesan'] if result else 'Terjadi kesalahan.'
+        
+        # Check if error atau success berdasarkan prefix pesan
+        if pesan.startswith('ERROR:'):
+            messages.error(request, pesan.replace('ERROR: ', ''))
+        else:
+            messages.success(request, pesan.replace('SUKSES: ', ''))
+        
+    except DatabaseError as e:
+        messages.error(request, f'Terjadi kesalahan database: {str(e)}')
+    except Exception as e:
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
     
-    # Record transaction (mockup)
-    new_transaction = {
-        'id': len(MEMBER_AWARD_MILES_PACKAGE) + 1,
-        'id_award_miles_package': package_found['id'],
-        'email_member': MEMBER_DATA['email'],
-        'harga_paket': package_found['harga_paket'],
-        'jumlah_award_miles': package_found['jumlah_award_miles'],
-        'waktu': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-    }
-    MEMBER_AWARD_MILES_PACKAGE.insert(0, new_transaction)  # Add to beginning
-    
-    messages.success(request, f'Paket {package_found["id"]} berhasil dibeli! {package_found["jumlah_award_miles"]} award miles telah ditambahkan ke akun Anda.')
     return redirect('miles:buy_miles_package')

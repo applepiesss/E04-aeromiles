@@ -355,6 +355,7 @@ def dashboard(request):
             'klaim_ditolak': klaim_ditolak,
         }
 
+    return render(request, 'dashboard.html', context)
 
 @require_http_methods(["GET", "POST"])
 def profile_settings(request):
