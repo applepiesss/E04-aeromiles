@@ -61,9 +61,10 @@
                     <label class="form-label">Salutation <span style="color:#DC2626">*</span></label>
                     <select name="salutation" class="form-control" required>
                         <option value="">Pilih</option>
-                        {% for s in 'Mr.,Mrs.,Ms.,Dr.'|split:',' %}
-                        <option value="{{ s }}" {% if form.salutation == s %}selected{% endif %}>{{ s }}</option>
-                        {% endfor %}
+                        <option value="Mr." {% if form.salutation == 'Mr.' %}selected{% endif %}>Mr.</option>
+                        <option value="Mrs." {% if form.salutation == 'Mrs.' %}selected{% endif %}>Mrs.</option>
+                        <option value="Ms." {% if form.salutation == 'Ms.' %}selected{% endif %}>Ms.</option>
+                        <option value="Dr." {% if form.salutation == 'Dr.' %}selected{% endif %}>Dr.</option>
                     </select>
                 </div>
 
@@ -111,8 +112,8 @@
                         <label class="form-label">Kode Maskapai <span style="color:#DC2626">*</span></label>
                         <select name="kode_maskapai" class="form-control" id="maskapaiSelect">
                             <option value="">Pilih maskapai tempat Anda bekerja</option>
-                            {% for k, info in maskapai_list %}
-                            <option value="{{ k }}" {% if form.kode_maskapai == k %}selected{% endif %}>{{ k }} – {{ info.nama_maskapai }}</option>
+                            {% for kode, nama in maskapai_list %}
+                            <option value="{{ kode }}" {% if form.kode_maskapai == kode %}selected{% endif %}>{{ kode }} – {{ nama }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -140,23 +141,16 @@ function setRole(r) {
     const btnMember = document.getElementById('btnMember');
     const btnStaff = document.getElementById('btnStaff');
 
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('birthDate').setAttribute('max', today);
-
     if (isMember) {
-        btnMember.style.background = 'var(--blue-primary)';
+        btnMember.style.background = 'var(--blue-primary, #0056b3)';
         btnMember.style.color = '#fff';
-        btnMember.style.boxShadow = 'var(--shadow-sm)';
         btnStaff.style.background = 'transparent';
-        btnStaff.style.color = 'var(--text-secondary)';
-        btnStaff.style.boxShadow = 'none';
+        btnStaff.style.color = 'var(--text-secondary, #64748b)';
     } else {
-        btnStaff.style.background = 'var(--blue-primary)';
+        btnStaff.style.background = 'var(--blue-primary, #0056b3)';
         btnStaff.style.color = '#fff';
-        btnStaff.style.boxShadow = 'var(--shadow-sm)';
         btnMember.style.background = 'transparent';
-        btnMember.style.color = 'var(--text-secondary)';
-        btnMember.style.boxShadow = 'none';
+        btnMember.style.color = 'var(--text-secondary, #64748b)';
     }
 }
 
