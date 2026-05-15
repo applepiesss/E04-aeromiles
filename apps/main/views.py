@@ -259,15 +259,15 @@ def dashboard(request):
 
         if not m:
             return redirect('main:login')
-
+        
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT timestamp, jenis, keterangan, jumlah
                 FROM (
                     SELECT r.timestamp,
-                           'Redeem' AS jenis,
-                           h.nama || ' (' || r.kode_hadiah || ')' AS keterangan,
-                           -h.miles AS jumlah
+                        'Redeem' AS jenis,
+                        h.nama || ' (' || r.kode_hadiah || ')' AS keterangan,
+                        -h.miles AS jumlah
                     FROM REDEEM r
                     JOIN HADIAH h ON r.kode_hadiah = h.kode_hadiah
                     WHERE r.email_member = %s
@@ -275,10 +275,10 @@ def dashboard(request):
                     UNION ALL
 
                     SELECT t.timestamp,
-                           'Transfer' AS jenis,
-                           'Ke ' || p.salutation || ' ' || p.first_mid_name || ' ' || p.last_name
-                               || CASE WHEN t.catatan IS NOT NULL THEN ' – ' || t.catatan ELSE '' END,
-                           -t.jumlah
+                        'Transfer' AS jenis,
+                        'Ke ' || p.salutation || ' ' || p.first_mid_name || ' ' || p.last_name
+                            || CASE WHEN t.catatan IS NOT NULL THEN ' – ' || t.catatan ELSE '' END,
+                        -t.jumlah
                     FROM TRANSFER t
                     JOIN PENGGUNA p ON t.email_member_2 = p.email
                     WHERE t.email_member_1 = %s
@@ -286,17 +286,37 @@ def dashboard(request):
                     UNION ALL
 
                     SELECT t.timestamp,
-                           'Transfer' AS jenis,
-                           'Dari ' || p.salutation || ' ' || p.first_mid_name || ' ' || p.last_name
-                               || CASE WHEN t.catatan IS NOT NULL THEN ' – ' || t.catatan ELSE '' END,
-                           t.jumlah
+                        'Transfer' AS jenis,
+                        'Dari ' || p.salutation || ' ' || p.first_mid_name || ' ' || p.last_name
+                            || CASE WHEN t.catatan IS NOT NULL THEN ' – ' || t.catatan ELSE '' END,
+                        t.jumlah
                     FROM TRANSFER t
                     JOIN PENGGUNA p ON t.email_member_1 = p.email
                     WHERE t.email_member_2 = %s
+
+                    UNION ALL
+
+                    SELECT mp.timestamp,
+                        'Package' AS jenis,
+                        'Beli ' || a.jumlah_award_miles || ' Award Miles (' || mp.id_award_miles_package || ')' AS keterangan,
+                        a.jumlah_award_miles AS jumlah
+                    FROM MEMBER_AWARD_MILES_PACKAGE mp
+                    JOIN AWARD_MILES_PACKAGE a ON mp.id_award_miles_package = a.id
+                    WHERE mp.email_member = %s
+
+                    UNION ALL
+
+                    SELECT c.timestamp,
+                        'Klaim' AS jenis,
+                        'Klaim ' || c.flight_number || ' (' || c.bandara_asal || ' → ' || c.bandara_tujuan || ')' AS keterangan,
+                        1000 AS jumlah
+                    FROM CLAIM_MISSING_MILES c
+                    WHERE c.email_member = %s AND c.status_penerimaan = 'Disetujui'
+
                 ) tx
                 ORDER BY timestamp DESC
                 LIMIT 5
-            """, [email, email, email])
+            """, [email, email, email, email, email])
             transactions = dictfetchall(cursor)
 
         for tx in transactions:
