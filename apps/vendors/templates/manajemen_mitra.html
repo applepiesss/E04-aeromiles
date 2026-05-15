@@ -54,6 +54,7 @@
         vertical-align: middle;
         color: var(--text-secondary);
         font-size: 0.9rem;
+        white-space: nowrap;
     }
 
     .table tr:last-child td { border-bottom: none; }
@@ -144,17 +145,15 @@
 
 {% block content %}
 <div class="page-wrapper">
-    <!-- Header -->
     <div class="page-header">
         <div>
             <h1>Manajemen Mitra</h1>
             <p>Kelola data mitra kerja sama dan penyedia hadiah program AeroMiles.</p>
         </div>
-        <button class="btn-primary" onclick="openModal('formModal')">+ Daftarkan Mitra</button>
+        <button type="button" class="btn-primary" onclick="openModal('formModal')">+ Daftarkan Mitra</button>
     </div>
 
     <div class="card">
-        <!-- Table Data -->
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -167,39 +166,50 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <!-- Data di-render lewat JavaScript -->
+                    {% for p in partners %}
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">{{ p.email_mitra }}</strong></td>
+                        <td><span style="background: var(--bg-surface); padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; border: 1px solid var(--border);">{{ p.id_penyedia }}</span></td>
+                        <td>{{ p.nama_mitra }}</td>
+                        <td>{{ p.tanggal_kerja_sama_fmt }}</td>
+                        <td style="text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button type="button" class="btn-action btn-edit" onclick="editMitra('{{ p.email_mitra }}', '{{ p.nama_mitra|escapejs }}', '{{ p.tanggal_kerja_sama_iso }}')">Edit</button>
+                            <button type="button" class="btn-action btn-delete" onclick="promptDelete('{{ p.email_mitra }}', '{{ p.nama_mitra|escapejs }}')">Hapus</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted">Belum ada data mitra terdaftar.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Modal Form Create / Update -->
 <div class="modal-overlay" id="formModal">
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title" id="modalFormTitle">Daftarkan Mitra Baru</h2>
-            <button class="btn-close" onclick="closeModal('formModal')">&times;</button>
+            <button type="button" class="btn-close" onclick="closeModal('formModal')">&times;</button>
         </div>
-        <form id="mitraForm" onsubmit="saveMitra(event)">
-            <!-- Hidden field to track if this is an update process -->
-            <input type="hidden" id="isUpdate" value="false">
-            <input type="hidden" id="providerId">
+        <form id="mitraForm" method="POST" action="{% url 'vendors:save_mitra' %}">
+            {% csrf_token %}
+            <input type="hidden" name="isUpdate" id="isUpdate" value="false">
             
             <div class="form-group">
                 <label class="form-label">Email Mitra (Primary Key) <span style="color:red">*</span></label>
-                <input type="email" id="mitraEmail" class="form-control" required placeholder="email@mitra.com">
+                <input type="email" name="email" id="mitraEmail" class="form-control" required placeholder="email@mitra.com">
                 <span class="input-hint" id="emailHint">Email akan digunakan sebagai pengenal utama mitra.</span>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Nama Mitra <span style="color:red">*</span></label>
-                <input type="text" id="mitraName" class="form-control" required placeholder="Contoh: Starbucks">
+                <input type="text" name="nama" id="mitraName" class="form-control" required placeholder="Contoh: Starbucks">
             </div>
 
             <div class="form-group">
                 <label class="form-label">Tanggal Kerja Sama <span style="color:red">*</span></label>
-                <input type="date" id="mitraJoinDate" class="form-control" required>
+                <input type="date" name="join_date" id="mitraJoinDate" class="form-control" required>
             </div>
 
             <div class="modal-footer">
@@ -210,7 +220,6 @@
     </div>
 </div>
 
-<!-- Modal Confirm Delete -->
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-content" style="max-width: 450px; text-align: center;">
         <div style="margin-bottom: 1rem; color: #DC2626; font-size: 3rem;">
@@ -221,89 +230,25 @@
             Apakah Anda yakin ingin menghapus mitra <strong id="deleteMitraName"></strong>? <br><br>
             <span style="color: #DC2626; font-weight: 600;">PERHATIAN:</span> Menghapus mitra ini juga akan <strong>menghapus seluruh hadiah</strong> yang disediakan oleh mitra tersebut dari sistem!
         </p>
-        <input type="hidden" id="deleteMitraEmail">
-        <div class="modal-footer" style="justify-content: center; margin-top: 2rem;">
-            <button class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
-            <button class="btn-primary" style="background: #DC2626;" onclick="confirmDelete()">Ya, Hapus Semua</button>
-        </div>
+        
+        <form method="POST" action="{% url 'vendors:delete_mitra' %}">
+            {% csrf_token %}
+            <input type="hidden" name="email" id="deleteMitraEmail">
+            <div class="modal-footer" style="justify-content: center; margin-top: 2rem;">
+                <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+                <button type="submit" class="btn-primary" style="background: #DC2626;">Ya, Hapus Semua</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-    // State Dummy Data Mitra
-    let partners = [
-        { 
-            email: "partnership.hotelmulia@gmail.com", 
-            providerId: "6", 
-            name: "Hotel Mulia", 
-            joinDate: "2021-03-15" 
-        },
-        { 
-            email: "partnership.tiketcom@gmail.com", 
-            providerId: "7", 
-            name: "Tiket.com", 
-            joinDate: "2021-07-01" 
-        },
-        { 
-            email: "partnership.gojek@gmail.com", 
-            providerId: "8", 
-            name: "Gojek", 
-            joinDate: "2022-01-10" 
-        },
-        { 
-            email: "partnership.avisrentcar@gmail.com", 
-            providerId: "9", 
-            name: "Avis Rent a Car", 
-            joinDate: "2022-06-20" 
-        },
-        { 
-            email: "partnership.bca@gmail.com", 
-            providerId: "10", 
-            name: "Bank Central Asia", 
-            joinDate: "2023-02-28" 
-        }
-    ];
-
-    // Format Tanggal
-    function formatDate(dateStr) {
-        const options = { day: '2-digit', month: 'long', year: 'numeric' };
-        return new Date(dateStr).toLocaleDateString('id-ID', options);
-    }
-
-    // Render Table
-    function renderTable() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-
-        if(partners.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Belum ada data mitra terdaftar.</td></tr>`;
-            return;
-        }
-
-        partners.forEach(p => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong style="color: var(--text-primary);">${p.email}</strong></td>
-                <td><span style="background: var(--bg-surface); padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; border: 1px solid var(--border);">${p.providerId}</span></td>
-                <td>${p.name}</td>
-                <td>${formatDate(p.joinDate)}</td>
-                <td style="text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
-                    <button class="btn-action btn-edit" onclick="editMitra('${p.email}')">Edit</button>
-                    <button class="btn-action btn-delete" onclick="promptDelete('${p.email}', '${p.name}')">Hapus</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    // Modal Controls
     function openModal(modalId) {
         if(modalId === 'formModal' && document.getElementById('isUpdate').value === 'false') {
             document.getElementById('modalFormTitle').innerText = "Daftarkan Mitra Baru";
             document.getElementById('mitraForm').reset();
-            document.getElementById('mitraEmail').disabled = false;
+            document.getElementById('mitraEmail').readOnly = false;
             document.getElementById('emailHint').innerText = "Email akan digunakan sebagai pengenal utama mitra.";
-            document.getElementById('providerId').value = '';
         }
         document.getElementById(modalId).classList.add('active');
     }
@@ -313,81 +258,28 @@
         if(modalId === 'formModal') {
             document.getElementById('mitraForm').reset();
             document.getElementById('isUpdate').value = 'false';
-            document.getElementById('mitraEmail').disabled = false;
+            document.getElementById('mitraEmail').readOnly = false;
         }
     }
 
-    // CREATE & UPDATE Logic
-    function saveMitra(e) {
-        e.preventDefault();
-        
-        const isUpdate = document.getElementById('isUpdate').value === 'true';
-        const email = document.getElementById('mitraEmail').value;
-        const name = document.getElementById('mitraName').value;
-        const joinDate = document.getElementById('mitraJoinDate').value;
-        let providerId = document.getElementById('providerId').value;
-
-        if (isUpdate) {
-            // Update
-            const index = partners.findIndex(p => p.email === email);
-            if(index > -1) {
-                // Email dan Provider ID tidak diubah
-                partners[index].name = name;
-                partners[index].joinDate = joinDate;
-            }
-        } else {
-            // Cek apakah email sudah ada (Primary Key unik)
-            if (partners.some(p => p.email === email)) {
-                alert("Gagal! Email ini sudah terdaftar sebagai mitra.");
-                return;
-            }
-            // Create - Auto Generate Provider ID
-            providerId = 'PRV-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            partners.push({ email, providerId, name, joinDate });
-        }
-
-        closeModal('formModal');
-        renderTable();
-    }
-
-    // EDIT Data Preparation
-    function editMitra(email) {
-        const p = partners.find(x => x.email === email);
-        if(!p) return;
-
+    function editMitra(email, name, joinDate) {
         document.getElementById('isUpdate').value = 'true';
         document.getElementById('modalFormTitle').innerText = "Edit Data Mitra";
         
-        document.getElementById('mitraEmail').value = p.email;
-        document.getElementById('mitraEmail').disabled = true;
-        document.getElementById('emailHint').innerText = "Email tidak dapat diubah";
+        document.getElementById('mitraEmail').value = email;
+        document.getElementById('mitraEmail').readOnly = true;
+        document.getElementById('emailHint').innerText = "Email (Primary Key) tidak dapat diubah";
         
-        document.getElementById('providerId').value = p.providerId;
-        document.getElementById('mitraName').value = p.name;
-        document.getElementById('mitraJoinDate').value = p.joinDate;
+        document.getElementById('mitraName').value = name;
+        document.getElementById('mitraJoinDate').value = joinDate;
 
         openModal('formModal');
     }
 
-    // DELETE Logic
     function promptDelete(email, name) {
         document.getElementById('deleteMitraEmail').value = email;
         document.getElementById('deleteMitraName').innerText = name;
         openModal('deleteModal');
     }
-
-    function confirmDelete() {
-        const email = document.getElementById('deleteMitraEmail').value;
-        partners = partners.filter(p => p.email !== email);
-        
-        // Simulasi menghapus hadiah: Di dunia nyata ini akan menembak API/Backend
-        console.log(`Menghapus mitra ${email} dan melakukan cascading delete pada hadiah terkait...`);
-        
-        closeModal('deleteModal');
-        renderTable();
-    }
-
-    // Init
-    window.onload = renderTable;
 </script>
 {% endblock content %}

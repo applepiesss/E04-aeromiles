@@ -1,0 +1,102 @@
+<style>
+    .toast-container {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .toast-item {
+        min-width: 320px;
+        max-width: 450px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-left: 6px solid #e2e8f0;
+        animation: slideIn 0.3s ease-out forwards;
+    }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #1e293b;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    /* Variasi Warna Berdasarkan Tag Django */
+    .toast-item.success { border-left-color: #10b981; } /* Hijau */
+    .toast-item.error { border-left-color: #ef4444; }   /* Merah */
+    .toast-item.warning { border-left-color: #f59e0b; } /* Kuning */
+    .toast-item.info { border-left-color: #3b82f6; }    /* Biru */
+
+    .btn-close-toast {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        font-size: 1.25rem;
+        padding: 4px;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+
+    .btn-close-toast:hover { color: #475569; }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast-item.fade-out {
+        animation: fadeOut 0.4s ease-in forwards;
+    }
+
+    @keyframes fadeOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+</style>
+
+{% if messages %}
+<div class="toast-container">
+    {% for message in messages %}
+    <div class="toast-item {{ message.tags }}" id="toast-{{ forloop.counter }}">
+        <div class="toast-content">
+            {% if message.tags == 'success' %} ✅ 
+            {% elif message.tags == 'error' %} ❌ 
+            {% else %} ℹ️ {% endif %}
+            <span>{{ message }}</span>
+        </div>
+        <button type="button" class="btn-close-toast" onclick="closeToast('toast-{{ forloop.counter }}')">&times;</button>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function closeToast(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('fade-out');
+            setTimeout(() => el.remove(), 400);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const toasts = document.querySelectorAll('.toast-item');
+        toasts.forEach(toast => {
+            setTimeout(() => {
+                if (toast.parentNode) closeToast(toast.id);
+            }, 5000);
+        });
+    });
+</script>
+{% endif %}
