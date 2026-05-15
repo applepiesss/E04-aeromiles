@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load custom_filters %}
 {% block title %}AeroMiles - Klaim Missing Miles{% endblock %}
 
 {% block extra_head %}
@@ -33,6 +32,7 @@
 {% endblock %}
 
 {% block content %}
+{% include 'toast.html' %}
 <div class="page-wrapper">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
         <div>

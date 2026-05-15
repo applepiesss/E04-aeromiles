@@ -13,7 +13,7 @@ def claim_create(request):
         messages.error(request, "Anda harus login terlebih dahulu untuk mengajukan claim.")
         return redirect('main:login')
 
-    # Cek role harus member
+    # Cek role jika bukan member redirect ke dashboard
     if request.session.get('role') != "member":
         messages.error(request, "Anda tidak memiliki hak akses untuk mengajukan claim.")
         return redirect('main:dashboard')
@@ -94,7 +94,7 @@ def claim_member_list(request):
         messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
 
-    # Cek role
+    # Cek role jika bukan member redirect ke dashboard
     if request.session.get('role') != "member":
         messages.error(request, "Anda tidak memiliki hak akses.")
         return redirect('main:dashboard')
@@ -182,62 +182,95 @@ def claim_member_list(request):
         'bandara_list': bandara_list,
     })
 
+# U - Edit Claim - Member
 def claim_edit(request, claim_id):
-    if not require_member(request):
+    # Cek apakah sudah login
+    if not request.session.get('email'):
+        messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
+
+    # Cek role jika bukan member redirect ke dashboard
+    if request.session.get('role') != 'member':
+        messages.error(request, "Anda tidak memiliki hak akses.")
+        return redirect('main:dashboard')
 
     if request.method == 'POST':
         errors = []
-        fields = ['maskapai', 'bandara_asal', 'bandara_tujuan',
-                  'tanggal_penerbangan', 'flight_number',
-                  'nomor_tiket', 'kelas_kabin', 'pnr']
-        for f in fields:
-            if not request.POST.get(f, '').strip():
-                errors.append(f'Field {f} wajib diisi.')
-                break
 
+        # Ambil data dari form
+        maskapai            = request.POST.get('maskapai', '').strip()
+        bandara_asal        = request.POST.get('bandara_asal', '').strip()
+        bandara_tujuan      = request.POST.get('bandara_tujuan', '').strip()
+        tanggal_penerbangan = request.POST.get('tanggal_penerbangan', '').strip()
+        flight_number       = request.POST.get('flight_number', '').strip()
+        nomor_tiket         = request.POST.get('nomor_tiket', '').strip()
+        kelas_kabin         = request.POST.get('kelas_kabin', '').strip()
+        pnr                 = request.POST.get('pnr', '').strip()
+
+        # Validasi required field
+        required_fields = [
+            maskapai, bandara_asal, bandara_tujuan, tanggal_penerbangan, flight_number, nomor_tiket, kelas_kabin, pnr
+        ]
+        if any(not f for f in required_fields):
+            errors.append('Semua field wajib diisi.')
+
+        # Validasi kelas_kabin
+        if kelas_kabin and kelas_kabin not in ('Economy', 'Business', 'First'):
+            errors.append('Kelas kabin tidak valid.')
+
+        # Validasi bandara asal dan tujuan tidak boleh sama
+        if bandara_asal and bandara_tujuan and bandara_asal == bandara_tujuan:
+            errors.append('Bandara asal dan tujuan tidak boleh sama.')
+
+        # Update data jika tdk ada error
         if not errors:
             email = request.session.get('email')
             try:
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        UPDATE claim_missing_miles
-                        SET maskapai = %s, bandara_asal = %s, bandara_tujuan = %s,
-                            tanggal_penerbangan = %s, flight_number = %s,
-                            nomor_tiket = %s, kelas_kabin = %s, pnr = %s
+                        UPDATE CLAIM_MISSING_MILES
+                        SET maskapai = %s, bandara_asal = %s, bandara_tujuan = %s, tanggal_penerbangan = %s, flight_number = %s, nomor_tiket = %s, kelas_kabin = %s, pnr = %s
                         WHERE id = %s AND email_member = %s AND status_penerimaan = 'Menunggu'
                     """, [
-                        request.POST['maskapai'],
-                        request.POST['bandara_asal'],
-                        request.POST['bandara_tujuan'],
-                        request.POST['tanggal_penerbangan'],
-                        request.POST['flight_number'],
-                        request.POST['nomor_tiket'],
-                        request.POST['kelas_kabin'],
-                        request.POST['pnr'],
-                        claim_id,
-                        email,
+                        maskapai, bandara_asal, bandara_tujuan,
+                        tanggal_penerbangan, flight_number,
+                        nomor_tiket, kelas_kabin, pnr,
+                        claim_id, email,
                     ])
             except Exception as e:
                 errors.append(str(e))
 
+        # Jika ada error, tampilkan pesan error
+        if errors:
+            messages.error(request, ' '.join(errors))
+        else:
+            messages.success(request, 'Claim berhasil diupdate.')
+
     return redirect('miles:claim_member_list')
 
-
+# D - Batalkan Claim - Member
 def claim_delete(request, claim_id):
-    if not require_member(request):
+    # Cek apakah sudah login
+    if not request.session.get('email'):
+        messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
+
+    # Cek role jika bukan member redirect ke dashboard
+    if request.session.get('role') != 'member':
+        messages.error(request, "Anda tidak memiliki hak akses.")
+        return redirect('main:dashboard')
 
     if request.method == 'POST':
         email = request.session.get('email')
         with connection.cursor() as cursor:
             cursor.execute("""
-                DELETE FROM claim_missing_miles
+                DELETE FROM CLAIM_MISSING_MILES
                 WHERE id = %s AND email_member = %s AND status_penerimaan = 'Menunggu'
             """, [claim_id, email])
 
     return redirect('miles:claim_member_list')
 
+# R - Daftar Claim - Staff
 def claim_staff_list(request):
     if not require_staff(request):
         return redirect('main:login')
@@ -298,6 +331,7 @@ def claim_staff_list(request):
         'maskapai_filter': maskapai_filter,
     })
 
+# U - Ubah Claim (Approve) - Staff
 def claim_approve(request, claim_id):
     if not require_staff(request):
         return redirect('main:login')
@@ -313,6 +347,7 @@ def claim_approve(request, claim_id):
 
     return redirect('miles:claim_staff_list')
 
+# U - Ubah Claim (Reject) - Staff
 def claim_reject(request, claim_id):
     if not require_staff(request):
         return redirect('main:login')
@@ -328,6 +363,7 @@ def claim_reject(request, claim_id):
 
     return redirect('miles:claim_staff_list')
 
+# R - Riwayat Transfer - Member
 def transfer_list(request):
     if not require_member(request):
         return redirect('main:login')
@@ -369,7 +405,7 @@ def transfer_list(request):
         'award_miles': award_miles,
     })
 
-
+# C - Buat Transfer - Member
 def transfer_create(request):
     if not require_member(request):
         return redirect('main:login')
