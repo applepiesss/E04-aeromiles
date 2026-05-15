@@ -446,7 +446,7 @@ CREATE TABLE MEMBER_AWARD_MILES_PACKAGE(
     email_member VARCHAR(100),
     timestamp timestamp,
 
-    PRIMARY KEY (id_award_miles_package, email_member, waktu),
+    PRIMARY KEY (id_award_miles_package, email_member, timestamp),
     FOREIGN KEY (id_award_miles_package) REFERENCES AWARD_MILES_PACKAGE(id),
     FOREIGN KEY (email_member) REFERENCES MEMBER(email) ON DELETE CASCADE
 );
@@ -521,7 +521,7 @@ CREATE TABLE CLAIM_MISSING_MILES(
     kelas_kabin VARCHAR(20) NOT NULL CHECK (kelas_kabin IN ('Economy', 'Business', 'First')),
     pnr VARCHAR(10) NOT NULL,
     status_penerimaan VARCHAR(20) NOT NULL DEFAULT 'Menunggu' CHECK (status_penerimaan IN ('Menunggu', 'Disetujui', 'Ditolak')),
-    waktu_penerbangan timestamp NOT NULL, 
+    timestamp timestamp NOT NULL, 
 
     FOREIGN KEY (email_member) REFERENCES MEMBER(email) ON DELETE CASCADE,
     FOREIGN KEY (email_staf) REFERENCES STAF(email),
@@ -622,7 +622,7 @@ FOR EACH ROW EXECUTE FUNCTION cek_duplikat_klaim_missing_miles();
 INSERT INTO CLAIM_MISSING_MILES (
     email_member, email_staf, maskapai, bandara_asal, bandara_tujuan, 
     tanggal_penerbangan, flight_number, nomor_tiket, kelas_kabin, pnr, 
-    status_penerimaan, waktu_penerbangan
+    status_penerimaan, timestamp
 ) VALUES 
 ('strawberry.shortcake@gmail.com', 'harry.potter@ui.ac.id', 'GA', 'CGK', 'DPS', '2023-12-01', 'GA404', '1260000001', 'Economy', 'ABCDEF', 'Disetujui', '2023-12-01 10:00:00'),
 ('blueberry.muffin@gmail.com', NULL, 'QG', 'SUB', 'CGK', '2024-01-10', 'QG712', '1260000002', 'Economy', 'QWERTY', 'Menunggu', '2024-01-10 14:30:00'),
@@ -646,7 +646,7 @@ INSERT INTO CLAIM_MISSING_MILES (
 ('josh.sanderson@ui.ac.id', NULL, 'JT', 'CGK', 'KNO', '2024-12-20', 'JT101', '1260000020', 'Economy', 'UHBVGY', 'Menunggu', '2024-12-20 17:00:00');
 
 
-INSERT INTO MEMBER_AWARD_MILES_PACKAGE (id_award_miles_package, email_member, waktu) 
+INSERT INTO MEMBER_AWARD_MILES_PACKAGE (id_award_miles_package, email_member, timestamp) 
 VALUES 
     ('AMP-001', 'strawberry.shortcake@gmail.com', '2024-01-15 10:30:00'),
     ('AMP-002', 'blueberry.muffin@gmail.com', '2024-01-20 14:15:00'),
