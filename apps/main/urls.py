@@ -1,6 +1,6 @@
-from django.urls import include, path
+from django.urls import path, include
 from main.views import show_main, profile_settings, change_password
-from .views import show_main, login_view, dashboard
+from .views import show_main, login_view, dashboard, logout_view, register_view
 
 app_name = 'main'
 
@@ -9,6 +9,8 @@ urlpatterns = [
     path('profile-settings/', profile_settings, name='profile_settings'),
     path('change-password/', change_password, name='change_password'),
     path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('register/', register_view, name='register'),
     path('dashboard/', dashboard, name='dashboard'),
     path('vendors/', include('apps.vendors.urls')),
 ]

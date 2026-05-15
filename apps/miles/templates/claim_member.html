@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}AeroMiles - Klaim Missing Miles{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+        <div>
+            <h1 style="font-size:1.4rem;margin-bottom:.2rem;">Klaim Missing Miles</h1>
+            <p class="text-muted text-sm">Ajukan penerbangan yang belum tercatat</p>
+        </div>
+        <button class="btn-primary" onclick="openModal('createModal')">+ Ajukan Klaim</button>
+    </div>
+
+    <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;">
+        {% for s in 'Semua,Menunggu,Disetujui,Ditolak'|split:',' %}
+        <a href="?status={% if s != 'Semua' %}{{ s }}{% endif %}"
+        style="padding:.4rem .9rem;border-radius:.5rem;font-size:.85rem;font-weight:500;text-decoration:none;
+                background:{% if status_filter == s or s == 'Semua' and not status_filter %}var(--blue-primary){% else %}var(--bg-surface){% endif %};
+                color:{% if status_filter == s or s == 'Semua' and not status_filter %}#fff{% else %}var(--text-secondary){% endif %};">
+        {{ s }}
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if errors %}
+    <div class="alert alert-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+    {% endif %}
+
+    <div class="card" style="padding:0;overflow:hidden;">
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
+            <thead>
+            <tr style="background:var(--bg-tint);border-bottom:1.5px solid var(--border);">
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">No. Klaim</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Maskapai</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Rute</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Tanggal</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Flight</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Kelas</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Status</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Pengajuan</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Aksi</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for c in claims %}
+                <tr style="border-bottom:1px solid var(--border);transition:background .1s;" onmouseover="this.style.background='var(--bg-tint)'" onmouseout="this.style.background=''">
+                    <td style="padding:.7rem 1rem;font-weight:600;color:var(--blue-primary);">CLM-{{ c.id|stringformat:'03d' }}</td>
+                    
+                    <td style="padding:.7rem 1rem;">{{ c.nama_maskapai }}</td>
+                    
+                    <td style="padding:.7rem 1rem;">{{ c.nama_asal }} → {{ c.nama_tujuan }}</td>
+                    
+                    <td style="padding:.7rem 1rem;">{{ c.tanggal_penerbangan }}</td>
+
+                    <td style="padding:.7rem 1rem;">{{ c.flight_number }}</td>
+                    
+                    <td style="padding:.7rem 1rem;">{{ c.kelas_kabin }}</td>
+                    
+                    <td style="padding:.7rem 1rem;">
+                        {% if c.status_penerimaan == 'Disetujui' %}
+                        <span style="background:#DCFCE7;color:#16A34A;padding:.2rem .6rem;border-radius:.4rem;font-size:.8rem;font-weight:600;">Disetujui</span>
+                        {% elif c.status_penerimaan == 'Menunggu' %}
+                        <span style="background:#FEF3C7;color:#D97706;padding:.2rem .6rem;border-radius:.4rem;font-size:.8rem;font-weight:600;">Menunggu</span>
+                        {% else %}
+                        <span style="background:#FEE2E2;color:#DC2626;padding:.2rem .6rem;border-radius:.4rem;font-size:.8rem;font-weight:600;">Ditolak</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td style="padding:.7rem 1rem;font-size:.82rem;color:var(--text-secondary);">{{ c.waktu_penerbangan }}</td>
+                    
+                    <td style="padding:.7rem 1rem;">
+                        {% if c.status_penerimaan == 'Menunggu' %}
+                        <div style="display:flex;gap:.4rem;">
+                            <button class="btn-secondary"
+                            onclick="openEditModal(
+                                '{{ c.id }}', 
+                                '{{ c.maskapai }}', 
+                                '{{ c.kelas_kabin }}', 
+                                '{{ c.tanggal_penerbangan|date:"Y-m-d" }}', 
+                                '{{ c.flight_number }}',
+                                '{{ c.bandara_asal }}',   
+                                '{{ c.bandara_tujuan }}',   
+                                '{{ c.nomor_tiket }}',
+                                '{{ c.pnr }}'
+                            )">✏️</button>
+                        <button style="padding:.3rem .7rem;font-size:.8rem;border-radius:var(--radius-md);border:1px solid #FECACA;background:#FEF2F2;color:#DC2626;cursor:pointer;"
+                            onclick="openDeleteModal('{{ c.id }}')">🗑️</button>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" style="padding:2rem;text-align:center;color:var(--text-secondary);">Belum ada klaim.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    </div>
+
+    <div id="createModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+        <h2 style="font-size:1.1rem;">Ajukan Klaim Baru</h2>
+        <button onclick="closeModal('createModal')" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--text-secondary);">×</button>
+        </div>
+        <form method="post" action="{% url 'miles:claim_create' %}">
+        {% csrf_token %}
+        {% include '_claim_form_fields.html' with edit_mode=True maskapai_list=maskapai_list bandara_list=bandara_list %}
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;">
+            <button type="button" class="btn-secondary" onclick="closeModal('createModal')">Batal</button>
+            <button type="submit" class="btn-primary">Ajukan</button>
+        </div>
+        </form>
+    </div>
+    </div>
+
+    <div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+        <h2 style="font-size:1.1rem;">Edit Klaim</h2>
+        <button onclick="closeModal('editModal')" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--text-secondary);">×</button>
+        </div>
+        <form method="post" id="editForm" action="">
+        {% csrf_token %}
+        {% include '_claim_form_fields.html' with edit_mode=True %}
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;">
+            <button type="button" class="btn-secondary" onclick="closeModal('editModal')">Batal</button>
+            <button type="submit" class="btn-primary">Simpan</button>
+        </div>
+        </form>
+    </div>
+    </div>
+
+    <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+        <h2 style="font-size:1.1rem;margin-bottom:.5rem;">Batalkan Klaim?</h2>
+        <p class="text-muted text-sm" style="margin-bottom:1.5rem;">Klaim akan dihapus secara permanen.</p>
+        <form method="post" id="deleteForm" action="">
+        {% csrf_token %}
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;">
+            <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+            <button type="submit" style="padding:.65rem 1.5rem;background:#DC2626;color:#fff;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:600;">Hapus</button>
+        </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+    }
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+    function openDeleteModal(id) {
+        document.getElementById('deleteForm').action = '/miles/claim/' + id + '/delete/';
+        openModal('deleteModal');
+    }
+    
+    function openEditModal(id, maskapai, kelas, tgl, flight, asal, tujuan, tiket, pnr) {
+        var f = document.getElementById('editForm');
+        f.action = '/miles/claim/' + id + '/edit/'; 
+
+        f.querySelector('[name=maskapai]').value = maskapai;
+        f.querySelector('[name=kelas_kabin]').value = kelas;
+        f.querySelector('[name=tanggal_penerbangan]').value = tgl;
+        f.querySelector('[name=flight_number]').value = flight;
+        f.querySelector('[name=bandara_asal]').value = asal;
+        f.querySelector('[name=bandara_tujuan]').value = tujuan;
+        f.querySelector('[name=nomor_tiket]').value = tiket;
+        f.querySelector('[name=pnr]').value = pnr;
+        
+        openModal('editModal');
+    }
+    
+    {% if show_modal %}
+    openModal('createModal');
+    {% endif %}
+    </script>
+{% endblock %}
