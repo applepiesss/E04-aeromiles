@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db import connection
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import re
 
 _BULAN = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
@@ -377,53 +377,162 @@ def dashboard(request):
 
     return render(request, 'dashboard.html', context)
 
-STAFF_DATA = []
-MEMBER_DATA = []
-SALUTATION_CHOICES = []
-
 @require_http_methods(["GET", "POST"])
 def profile_settings(request):
-    """Display and handle profile settings mockup"""
-    user_type = request.GET.get('type', 'staff')  
+    """Display and handle profile settings"""
+    email = request.session.get('email')
+    role = request.session.get('role')
     
-    if user_type == 'staff':
-        profile = STAFF_DATA.copy()
-        is_staff = True
-    else:
-        profile = MEMBER_DATA.copy()
-        is_staff = False
+    if not email or not role:
+        return redirect('main:login')
+    
+    is_staff = role == 'staff'
+    errors = []
 
     if request.method == 'POST':
-        # Update hardcoded data (mockup)
-        for key in request.POST:
-            if key in profile:
-                profile[key] = request.POST[key]
+        # Get form data
+        salutation = request.POST.get('salutation', '').strip()
+        first_mid_name = request.POST.get('first_mid_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        country_code = request.POST.get('country_code', '').strip()
+        mobile_number = request.POST.get('mobile_number', '').strip()
+        kewarganegaraan = request.POST.get('kewarganegaraan', '').strip()
         
-        messages.success(request, 'Profil Anda berhasil diperbarui.')
-        return redirect('main:profile_settings' + ('?type=staff' if is_staff else ''))
+        # Validate required fields
+        required_fields = [salutation, first_mid_name, last_name, country_code, mobile_number, kewarganegaraan]
+        if any(not f for f in required_fields):
+            errors.append('Semua field wajib diisi.')
+        
+        # Validate salutation
+        if salutation and salutation not in ('Mr.', 'Mrs.', 'Ms.', 'Dr.'):
+            errors.append('Salutation tidak valid (Gunakan Mr., Mrs., Ms., atau Dr.).')
+        
+        # Validate country code
+        if country_code and not re.match(r'^\+\d+$', country_code):
+            errors.append('Kode negara harus diawali "+" diikuti angka (contoh: +62).')
+        
+        # Validate mobile number
+        if mobile_number:
+            if not mobile_number.isdigit():
+                errors.append('Nomor HP hanya boleh berisi angka.')
+            elif not (9 <= len(mobile_number) <= 13):
+                errors.append('Nomor HP harus berjumlah 9 hingga 13 digit.')
+        
+        # Update database if no errors
+        if not errors:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE PENGGUNA 
+                        SET salutation = %s, 
+                            first_mid_name = %s, 
+                            last_name = %s, 
+                            country_code = %s, 
+                            mobile_number = %s, 
+                            kewarganegaraan = %s
+                        WHERE email = %s
+                    """, [salutation, first_mid_name, last_name, country_code, mobile_number, kewarganegaraan, email])
+                
+                messages.success(request, 'Profil Anda berhasil diperbarui.')
+                return redirect('main:profile_settings' + ('?type=staff' if is_staff else ''))
+            
+            except DatabaseError as e:
+                error_msg = str(e)
+                if 'ERROR:' in error_msg:
+                    parts = error_msg.split('ERROR:')
+                    actual_error_message = parts[1].split('\n')[0].strip()
+                    errors.append(actual_error_message)
+                else:
+                    errors.append("Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.")
+            except Exception:
+                errors.append("Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.")
+    
+    # Fetch current profile data
+    profile = {}
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan
+                FROM PENGGUNA
+                WHERE email = %s
+            """, [email])
+            p = dictfetchone(cursor)
+            
+            if p:
+                profile = {
+                    'email': email,
+                    'salutation': p['salutation'],
+                    'first_mid_name': p['first_mid_name'],
+                    'last_name': p['last_name'],
+                    'country_code': p['country_code'],
+                    'mobile_number': p['mobile_number'],
+                    'date_of_birth': p['tanggal_lahir'].strftime('%Y-%m-%d') if isinstance(p['tanggal_lahir'], date) else p['tanggal_lahir'],
+                    'tanggal_lahir': _fmt_date(p['tanggal_lahir']),
+                    'kewarganegaraan': p['kewarganegaraan'],
+                }
+        
+        # Fetch member-specific data if user is member
+        if is_staff == False:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT nomor_member, tanggal_bergabung, id_tier, award_miles, total_miles
+                    FROM MEMBER
+                    WHERE email = %s
+                """, [email])
+                m = dictfetchone(cursor)
+                
+                if m:
+                    profile['member_number'] = m['nomor_member']
+                    profile['join_date'] = m['tanggal_bergabung'].strftime('%Y-%m-%d') if isinstance(m['tanggal_bergabung'], date) else m['tanggal_bergabung']
+                    profile['tanggal_bergabung'] = _fmt_date(m['tanggal_bergabung'])
+                    profile['tier_id'] = m['id_tier']
+                    profile['award_miles'] = m['award_miles']
+                    profile['total_miles'] = m['total_miles']
+        
+        # Fetch staff-specific data if user is staff
+        else:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id_staf, kode_maskapai
+                    FROM STAF
+                    WHERE email = %s
+                """, [email])
+                s = dictfetchone(cursor)
+                
+                if s:
+                    profile['staff_id'] = s['id_staf']
+                    profile['airline_code'] = s['kode_maskapai']
+    
+    except Exception as e:
+        profile = {}
 
     context = {
         'profile': profile,
         'is_staff': is_staff,
-        'user_type': user_type,
-        'salutation_choices': SALUTATION_CHOICES,
+        'user_type': 'staff' if is_staff else 'member',
+        'salutation_choices': ['Mr.', 'Mrs.', 'Ms.', 'Dr.'],
+        'errors': errors,
     }
 
     return render(request, 'profile_settings.html', context)
 
 @require_http_methods(["POST"])
 def change_password(request):
-    """Handle password change mockup"""
-    user_type = request.GET.get('type', 'member')
+    """Handle password change"""
+    email = request.session.get('email')
+    role = request.session.get('role')
     
-    # Validate password change (mockup - simple validation)
-    old_password = request.POST.get('old_password', '')
-    new_password = request.POST.get('new_password', '')
-    confirm_password = request.POST.get('confirm_password', '')
+    if not email or not role:
+        return redirect('main:login')
+    
+    # Get form data
+    old_password = request.POST.get('old_password', '').strip()
+    new_password = request.POST.get('new_password', '').strip()
+    confirm_password = request.POST.get('confirm_password', '').strip()
     
     errors = {}
     
-    # Simple mockup validation
+    # Validate inputs
     if not old_password:
         errors['old_password'] = 'Password lama harus diisi'
     
@@ -433,13 +542,45 @@ def change_password(request):
     if new_password != confirm_password:
         errors['confirm_password'] = 'Password baru dan konfirmasi tidak cocok'
     
+    # If no validation errors, verify old password and update
+    if not errors:
+        try:
+            with connection.cursor() as cursor:
+                # Verify old password
+                cursor.execute("""
+                    SELECT password FROM PENGGUNA WHERE email = %s
+                """, [email])
+                result = cursor.fetchone()
+                
+                if not result:
+                    errors['old_password'] = 'Pengguna tidak ditemukan'
+                elif result[0] != old_password:
+                    errors['old_password'] = 'Password lama tidak sesuai'
+                else:
+                    # Update password
+                    cursor.execute("""
+                        UPDATE PENGGUNA SET password = %s WHERE email = %s
+                    """, [new_password, email])
+                    
+                    messages.success(request, 'Password Anda berhasil diubah.')
+                    return redirect('main:profile_settings' + ('?type=staff' if role == 'staff' else ''))
+        
+        except DatabaseError as e:
+            error_msg = str(e)
+            if 'ERROR:' in error_msg:
+                parts = error_msg.split('ERROR:')
+                actual_error_message = parts[1].split('\n')[0].strip()
+                errors['general'] = actual_error_message
+            else:
+                errors['general'] = "Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi."
+        except Exception:
+            errors['general'] = "Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi."
+    
+    # Return to profile settings with errors
     if errors:
         messages.error(request, 'Ada kesalahan dalam form')
         context = {
-            'user_type': user_type,
+            'user_type': 'staff' if role == 'staff' else 'member',
             'password_errors': errors,
         }
         return render(request, 'profile_settings.html', context)
-    
-    messages.success(request, 'Password Anda berhasil diubah.')
-    return redirect('main:profile_settings' + ('?type=staff' if user_type == 'staff' else ''))
