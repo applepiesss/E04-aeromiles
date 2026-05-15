@@ -114,9 +114,9 @@ def claim_member_list(request):
                        c.nomor_tiket, c.kelas_kabin, c.pnr, c.status_penerimaan,
                        c.timestamp, c.email_staf
                 FROM CLAIM_MISSING_MILES c
-                JOIN MASKAPAI m ON c.maskapai = m.kode_maskapai
-                JOIN BANDARA ba ON c.bandara_asal = ba.iata_code
-                JOIN BANDARA bt ON c.bandara_tujuan = bt.iata_code
+                    JOIN MASKAPAI m ON c.maskapai = m.kode_maskapai
+                    JOIN BANDARA ba ON c.bandara_asal = ba.iata_code
+                    JOIN BANDARA bt ON c.bandara_tujuan = bt.iata_code
                 WHERE c.email_member = %s AND c.status_penerimaan = %s
                 ORDER BY c.timestamp DESC
             """, [email, status_filter])
@@ -129,9 +129,9 @@ def claim_member_list(request):
                        c.nomor_tiket, c.kelas_kabin, c.pnr, c.status_penerimaan,
                        c.timestamp, c.email_staf
                 FROM CLAIM_MISSING_MILES c
-                JOIN MASKAPAI m ON c.maskapai = m.kode_maskapai
-                JOIN BANDARA ba ON c.bandara_asal = ba.iata_code
-                JOIN BANDARA bt ON c.bandara_tujuan = bt.iata_code
+                    JOIN MASKAPAI m ON c.maskapai = m.kode_maskapai
+                    JOIN BANDARA ba ON c.bandara_asal = ba.iata_code
+                    JOIN BANDARA bt ON c.bandara_tujuan = bt.iata_code
                 WHERE c.email_member = %s
                 ORDER BY c.timestamp DESC
             """, [email])
@@ -272,72 +272,115 @@ def claim_delete(request, claim_id):
 
 # R - Daftar Claim - Staff
 def claim_staff_list(request):
-    if not require_staff(request):
+    # Cek apakah sudah login
+    if not request.session.get('email'):
+        messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
 
+    # Cek role jika bukan staff redirect ke dashboard
+    if request.session.get('role') != 'staff':
+        messages.error(request, "Anda tidak memiliki hak akses.")
+        return redirect('main:dashboard')
+
+    # Ambil filter
     status_filter   = request.GET.get('status', '')
     maskapai_filter = request.GET.get('maskapai', '')
-    email_staf      = request.session.get('email')
+    tanggal_dari    = request.GET.get('tanggal_dari', '')
+    tanggal_sampai  = request.GET.get('tanggal_sampai', '')
 
     with connection.cursor() as cursor:
+        # Ambil data
         query = """
             SELECT c.id, p.salutation || ' ' || p.first_mid_name || ' ' || p.last_name,
                    c.email_member, c.maskapai, m.nama_maskapai,
                    c.bandara_asal, ba.kota, c.bandara_tujuan, bt.kota,
                    c.tanggal_penerbangan, c.flight_number, c.kelas_kabin,
-                   c.waktu_penerbangan, c.status_penerimaan
+                   c.timestamp, c.status_penerimaan
             FROM claim_missing_miles c
-            JOIN maskapai m ON c.maskapai = m.kode_maskapai
-            JOIN bandara ba ON c.bandara_asal = ba.iata_code
-            JOIN bandara bt ON c.bandara_tujuan = bt.iata_code
-            JOIN member mb ON c.email_member = mb.email
-            JOIN pengguna p ON mb.email = p.email
-            JOIN staf s ON s.email = %s
-            WHERE c.maskapai = s.kode_maskapai
+                JOIN maskapai m  ON c.maskapai       = m.kode_maskapai
+                JOIN bandara ba  ON c.bandara_asal   = ba.iata_code
+                JOIN bandara bt  ON c.bandara_tujuan = bt.iata_code
+                JOIN member mb   ON c.email_member   = mb.email
+                JOIN pengguna p  ON mb.email         = p.email
+            WHERE 1=1
         """
-        params = [email_staf]
+        params = []
 
+        # Filter status
         if status_filter in ('Menunggu', 'Disetujui', 'Ditolak'):
             query += " AND c.status_penerimaan = %s"
             params.append(status_filter)
 
-        query += " ORDER BY c.waktu_penerbangan DESC"
+        # Filter maskapai
+        if maskapai_filter:
+            query += " AND c.maskapai = %s"
+            params.append(maskapai_filter)
+
+        # Filter tanggal
+        if tanggal_dari:
+            query += " AND c.timestamp::date >= %s"
+            params.append(tanggal_dari)
+
+        if tanggal_sampai:
+            query += " AND c.timestamp::date <= %s"
+            params.append(tanggal_sampai)
+
+        # Urutkan data 
+        query += " ORDER BY c.timestamp DESC"
         cursor.execute(query, params)
         rows = cursor.fetchall()
 
-        claims = []
-        for row in rows:
-            claims.append({
-                'id': row[0],
-                'nama_member': row[1],
-                'email_member': row[2],
-                'maskapai': row[3],
-                'nama_maskapai': row[4],
-                'rute': f"{row[5]} ({row[6]}) → {row[7]} ({row[8]})",
+        # Format data
+        claims = [
+            {
+                'id'                 : row[0],
+                'nama_member'        : row[1],
+                'email_member'       : row[2],
+                'maskapai'           : row[3],
+                'nama_maskapai'      : row[4],
+                'rute'               : f"{row[5]} ({row[6]}) → {row[7]} ({row[8]})",
                 'tanggal_penerbangan': row[9],
-                'flight_number': row[10],
-                'kelas_kabin': row[11],
-                'waktu_penerbangan': row[12],
-                'status_penerimaan': row[13],
-            })
+                'flight_number'      : row[10],
+                'kelas_kabin'        : row[11],
+                'timestamp'          : row[12],
+                'status_penerimaan'  : row[13],
+            }
+            for row in rows
+        ]
 
-        cursor.execute("SELECT kode_maskapai, nama_maskapai FROM maskapai ORDER BY nama_maskapai")
+        # Ambil list maskapai utk filter
+        cursor.execute('''SELECT kode_maskapai, nama_maskapai 
+                            FROM MASKAPAI 
+                            ORDER BY nama_maskapai
+        ''')
         maskapai_list = cursor.fetchall()
 
     return render(request, 'claim_staff.html', {
-        'claims': claims,
-        'maskapai_list': maskapai_list,
-        'status_filter': status_filter,
-        'maskapai_filter': maskapai_filter,
+        'claims'          : claims,
+        'maskapai_list'   : maskapai_list,
+        'status_filter'   : status_filter,
+        'maskapai_filter' : maskapai_filter,
+        'tanggal_dari'    : tanggal_dari,
+        'tanggal_sampai'  : tanggal_sampai,
     })
 
 # U - Ubah Claim (Approve) - Staff
 def claim_approve(request, claim_id):
-    if not require_staff(request):
+    # Cek apakah sudah login
+    if not request.session.get('email'):
+        messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
 
+    # Cek role jika bukan staff redirect ke dashboard
+    if request.session.get('role') != 'staff':
+        messages.error(request, "Anda tidak memiliki hak akses.")
+        return redirect('main:dashboard')
+
     if request.method == 'POST':
+        # Ambil email
         email_staf = request.session.get('email')
+
+        # Update status penerimaan jadi 'Disetujui'
         with connection.cursor() as cursor:
             cursor.execute("""
                 UPDATE claim_missing_miles
@@ -349,11 +392,21 @@ def claim_approve(request, claim_id):
 
 # U - Ubah Claim (Reject) - Staff
 def claim_reject(request, claim_id):
-    if not require_staff(request):
+    # Cek apakah sudah login
+    if not request.session.get('email'):
+        messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
 
+    # Cek role jika bukan staff redirect ke dashboard
+    if request.session.get('role') != 'staff':
+        messages.error(request, "Anda tidak memiliki hak akses.")
+        return redirect('main:dashboard')
+
     if request.method == 'POST':
+        # Ambil email
         email_staf = request.session.get('email')
+
+        # Update status penerimaan jadi 'Ditolak'
         with connection.cursor() as cursor:
             cursor.execute("""
                 UPDATE claim_missing_miles
@@ -365,24 +418,34 @@ def claim_reject(request, claim_id):
 
 # R - Riwayat Transfer - Member
 def transfer_list(request):
-    if not require_member(request):
+    # Cek apakah sudah login
+    if not request.session.get('email'):
+        messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
 
+    # Cek role jika bukan member redirect ke dashboard
+    if request.session.get('role') != 'member':
+        messages.error(request, "Anda tidak memiliki hak akses.")
+        return redirect('main:dashboard')
+
+    # Ambil email
     email = request.session.get('email')
 
     with connection.cursor() as cursor:
+        # Ambil data 
         cursor.execute("""
             SELECT t.email_member_1, t.email_member_2, t.timestamp, t.jumlah, t.catatan,
                    p1.salutation || ' ' || p1.first_mid_name || ' ' || p1.last_name,
                    p2.salutation || ' ' || p2.first_mid_name || ' ' || p2.last_name
-            FROM transfer t
-            JOIN pengguna p1 ON t.email_member_1 = p1.email
-            JOIN pengguna p2 ON t.email_member_2 = p2.email
+            FROM TRANSFER t
+                JOIN PENGGUNA p1 ON t.email_member_1 = p1.email
+                JOIN PENGGUNA p2 ON t.email_member_2 = p2.email
             WHERE t.email_member_1 = %s OR t.email_member_2 = %s
             ORDER BY t.timestamp DESC
         """, [email, email])
         rows = cursor.fetchall()
 
+        # Format data
         transfers = []
         for row in rows:
             is_sender = (row[0] == email)
@@ -397,7 +460,12 @@ def transfer_list(request):
                 'email_lawan': row[1] if is_sender else row[0],
             })
 
-        cursor.execute("SELECT award_miles FROM member WHERE email = %s", [email])
+        # Ambil award miles
+        cursor.execute('''
+            SELECT award_miles 
+            FROM MEMBER 
+            WHERE email = %s
+        ''', [email])
         award_miles = cursor.fetchone()[0]
 
     return render(request, 'transfer.html', {
@@ -407,50 +475,73 @@ def transfer_list(request):
 
 # C - Buat Transfer - Member
 def transfer_create(request):
-    if not require_member(request):
+    # Cek apakah sudah login
+    if not request.session.get('email'):
+        messages.error(request, "Anda harus login terlebih dahulu.")
         return redirect('main:login')
+
+    # Cek role jika bukan member redirect ke dashboard
+    if request.session.get('role') != 'member':
+        messages.error(request, "Anda tidak memiliki hak akses.")
+        return redirect('main:dashboard')
 
     if request.method == 'POST':
         errors = []
+
+        # Ambil data dari form
         email_pengirim = request.session.get('email')
         email_penerima = request.POST.get('email_penerima', '').strip()
         jumlah_str     = request.POST.get('jumlah', '0').strip()
         catatan        = request.POST.get('catatan', '').strip()
 
+        # Validasi jumlah
         try:
             jumlah = int(jumlah_str)
         except ValueError:
             jumlah = 0
+            errors.append('Jumlah miles harus berupa angka.')
 
-        if not email_penerima:
-            errors.append('Email penerima wajib diisi.')
         if jumlah <= 0:
             errors.append('Jumlah miles harus lebih dari 0.')
 
+        # Cek email
+        if not email_penerima:
+            errors.append('Email penerima wajib diisi.')
+        elif email_penerima.lower() == email_pengirim.lower():
+            errors.append('Anda tidak bisa mengirim miles ke diri sendiri.')
+
+        # Jika tidak ada error lakukan transfer
         if not errors:
             try:
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        INSERT INTO transfer (email_member_1, email_member_2, jumlah, catatan)
-                        VALUES (%s, %s, %s, %s)
+                        INSERT INTO TRANSFER
+                            (email_member_1, email_member_2, timestamp, jumlah, catatan)
+                        VALUES
+                            (%s, %s, CURRENT_TIMESTAMP, %s, %s)
                     """, [email_pengirim, email_penerima, jumlah, catatan or None])
             except Exception as e:
-                errors.append(str(e))
+                error_msg = str(e).split('CONTEXT:')[0] 
+                errors.append(error_msg)
 
+        # Jika ada error, kembalikan ke transfer page dgn pesan error
         if errors:
             with connection.cursor() as cursor:
-                cursor.execute("SELECT award_miles FROM member WHERE email = %s", [email_pengirim])
+                cursor.execute('''
+                    SELECT award_miles 
+                    FROM MEMBER 
+                    WHERE email = %s
+                ''', [email_pengirim])
                 award_miles = cursor.fetchone()[0]
+                
             return render(request, 'transfer.html', {
                 'transfers': [],
                 'award_miles': award_miles,
                 'errors': errors,
-                'show_modal': True,
                 'form': request.POST,
             })
 
         return redirect('miles:transfer_list')
-
     return redirect('miles:transfer_list')
 
 from django.views.decorators.http import require_http_methods
