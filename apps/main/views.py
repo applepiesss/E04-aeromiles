@@ -1,8 +1,29 @@
 from django.shortcuts import render, redirect
+from django.db import connection
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from datetime import datetime, timedelta
 
+_BULAN = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
+
+def dictfetchall(cursor):
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+def dictfetchone(cursor):
+    row = cursor.fetchone()
+    if row is None:
+        return None
+    columns = [col[0] for col in cursor.description]
+    return dict(zip(columns, row))
+
+def _fmt_date(d):
+    # Handles datetime.date, datetime.datetime, or ISO string from DB
+    if isinstance(d, str):
+        d = datetime.date.fromisoformat(d[:10])
+    elif isinstance(d, datetime.datetime):
+        d = d.date()
+    return f"{d.day:02d} {_BULAN[d.month]} {d.year}"
 
 def show_main(request):
     return render(request, "main.html")
@@ -422,10 +443,21 @@ def dashboard(request):
     if not email or not role:
         return redirect('main:login')
 
-    p = DUMMY_PENGGUNA.get(email, {})
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan
+            FROM PENGGUNA
+            WHERE email = %s
+        """, [email])
+        p = dictfetchone(cursor)
+
+    if not p:
+        request.session.flush()
+        return redirect('main:login')
+
     base = {
         'role': role,
-        'nama_lengkap': _nama(p),
+        'nama_lengkap': f"{p['salutation']} {p['first_mid_name']} {p['last_name']}",
         'email': email,
         'telepon': f"{p['country_code']} {p['mobile_number']}",
         'tanggal_lahir': _fmt_date(p['tanggal_lahir']),
@@ -433,67 +465,108 @@ def dashboard(request):
     }
 
     if role == 'member':
-        m = DUMMY_MEMBER.get(email, {})
-        tier = DUMMY_TIER.get(m.get('id_tier', ''), {})
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT m.nomor_member, m.tanggal_bergabung, m.id_tier, m.award_miles, m.total_miles, t.nama AS nama_tier
+                FROM MEMBER m
+                JOIN TIER t ON m.id_tier = t.id_tier
+                WHERE m.email = %s
+            """, [email])
+            m = dictfetchone(cursor)
 
-        transactions = []
+        if not m:
+            return redirect('main:login')
 
-        for r in DUMMY_REDEEM:
-            if r['email_member'] == email:
-                h = DUMMY_HADIAH.get(r['kode_hadiah'], {})
-                transactions.append({
-                    'timestamp': r['timestamp'],
-                    'jenis': 'Redeem',
-                    'keterangan': f"{h.get('nama', r['kode_hadiah'])} ({r['kode_hadiah']})",
-                    'jumlah': -h.get('miles', 0),
-                })
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT timestamp, jenis, keterangan, jumlah
+                FROM (
+                    SELECT r.timestamp,
+                           'Redeem' AS jenis,
+                           h.nama || ' (' || r.kode_hadiah || ')' AS keterangan,
+                           -h.miles AS jumlah
+                    FROM REDEEM r
+                    JOIN HADIAH h ON r.kode_hadiah = h.kode_hadiah
+                    WHERE r.email_member = %s
 
-        for t in DUMMY_TRANSFER:
-            if t['email_member_1'] == email:
-                penerima = DUMMY_PENGGUNA.get(t['email_member_2'], {})
-                transactions.append({
-                    'timestamp': t['timestamp'],
-                    'jenis': 'Transfer',
-                    'keterangan': f"Ke {_nama(penerima)} – {t['catatan']}",
-                    'jumlah': -t['jumlah'],
-                })
-            elif t['email_member_2'] == email:
-                pengirim = DUMMY_PENGGUNA.get(t['email_member_1'], {})
-                transactions.append({
-                    'timestamp': t['timestamp'],
-                    'jenis': 'Transfer',
-                    'keterangan': f"Dari {_nama(pengirim)} – {t['catatan']}",
-                    'jumlah': +t['jumlah'],
-                })
+                    UNION ALL
 
-        transactions.sort(key=lambda x: x['timestamp'], reverse=True)
+                    SELECT t.timestamp,
+                           'Transfer' AS jenis,
+                           'Ke ' || p.salutation || ' ' || p.first_mid_name || ' ' || p.last_name
+                               || CASE WHEN t.catatan IS NOT NULL THEN ' – ' || t.catatan ELSE '' END,
+                           -t.jumlah
+                    FROM TRANSFER t
+                    JOIN PENGGUNA p ON t.email_member_2 = p.email
+                    WHERE t.email_member_1 = %s
+
+                    UNION ALL
+
+                    SELECT t.timestamp,
+                           'Transfer' AS jenis,
+                           'Dari ' || p.salutation || ' ' || p.first_mid_name || ' ' || p.last_name
+                               || CASE WHEN t.catatan IS NOT NULL THEN ' – ' || t.catatan ELSE '' END,
+                           t.jumlah
+                    FROM TRANSFER t
+                    JOIN PENGGUNA p ON t.email_member_1 = p.email
+                    WHERE t.email_member_2 = %s
+                ) tx
+                ORDER BY timestamp DESC
+                LIMIT 5
+            """, [email, email, email])
+            transactions = dictfetchall(cursor)
+
         for tx in transactions:
             tx['tanggal'] = _fmt_date(tx['timestamp'])
 
         context = {
             **base,
-            'nomor_member': m.get('nomor_member', '-'),
-            'tier': tier.get('nama', '-'),
-            'id_tier': m.get('id_tier', ''),
-            'award_miles': m.get('award_miles', 0),
-            'total_miles': m.get('total_miles', 0),
+            'nomor_member': m['nomor_member'],
+            'tier': m['nama_tier'],
+            'id_tier': m['id_tier'],
+            'award_miles': m['award_miles'],
+            'total_miles': m['total_miles'],
             'tanggal_bergabung': _fmt_date(m['tanggal_bergabung']),
             'transactions': transactions,
         }
 
     else:  # staff
-        s = DUMMY_STAF.get(email, {})
-        maskapai = DUMMY_MASKAPAI.get(s.get('kode_maskapai', ''), {})
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT s.id_staf, s.kode_maskapai, mk.nama_maskapai
+                FROM STAF s
+                JOIN MASKAPAI mk ON s.kode_maskapai = mk.kode_maskapai
+                WHERE s.email = %s
+            """, [email])
+            s = dictfetchone(cursor)
 
-        klaim_menunggu = sum(1 for k in DUMMY_CLAIM_MISSING_MILES if k['status_penerimaan'] == 'Menunggu')
-        klaim_disetujui = sum(1 for k in DUMMY_CLAIM_MISSING_MILES if k['email_staf'] == email and k['status_penerimaan'] == 'Disetujui')
-        klaim_ditolak = sum(1 for k in DUMMY_CLAIM_MISSING_MILES if k['email_staf'] == email and k['status_penerimaan'] == 'Ditolak')
+        if not s:
+            return redirect('main:login')
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) FROM CLAIM_MISSING_MILES
+                WHERE status_penerimaan = 'Menunggu'
+            """)
+            klaim_menunggu = cursor.fetchone()[0]
+
+            cursor.execute("""
+                SELECT COUNT(*) FROM CLAIM_MISSING_MILES
+                WHERE email_staf = %s AND status_penerimaan = 'Disetujui'
+            """, [email])
+            klaim_disetujui = cursor.fetchone()[0]
+
+            cursor.execute("""
+                SELECT COUNT(*) FROM CLAIM_MISSING_MILES
+                WHERE email_staf = %s AND status_penerimaan = 'Ditolak'
+            """, [email])
+            klaim_ditolak = cursor.fetchone()[0]
 
         context = {
             **base,
-            'id_staf': s.get('id_staf', '-'),
-            'maskapai': maskapai.get('nama_maskapai', '-'),
-            'kode_maskapai': s.get('kode_maskapai', '-'),
+            'id_staf': s['id_staf'],
+            'maskapai': s['nama_maskapai'],
+            'kode_maskapai': s['kode_maskapai'],
             'klaim_menunggu': klaim_menunggu,
             'klaim_disetujui': klaim_disetujui,
             'klaim_ditolak': klaim_ditolak,
