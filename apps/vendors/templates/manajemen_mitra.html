@@ -153,14 +153,6 @@
         <button type="button" class="btn-primary" onclick="openModal('formModal')">+ Daftarkan Mitra</button>
     </div>
 
-    {% if messages %}
-        {% for msg in messages %}
-            <div class="alert alert-{{ msg.tags }}" style="margin-bottom: 1rem; padding: 1rem; background: #e0f2fe; color: #1e3a8a; border-radius: 8px;">
-                {{ msg }}
-            </div>
-        {% endfor %}
-    {% endif %}
-
     <div class="card">
         <div class="table-responsive">
             <table class="table">
