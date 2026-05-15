@@ -167,7 +167,6 @@ INSERT INTO PENGGUNA (email, password, salutation, first_mid_name, last_name, co
 ('luna.lovegood@ui.ac.id',          '$2b$12$QdWrT1bsWV4xY6aB7eeEeBgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwWw', 'Ms.', 'Luna',               'Lovegood',   '+44',  '7961234567', '1981-02-13', 'British'),
 ('oliver.wood@ui.ac.id',            '$2b$12$ReXsU2ctXW5yZ7bC8ffFfChIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxXx', 'Mr.', 'Oliver',             'Wood',       '+44',  '7971234567', '1975-01-15', 'British');
 
-
 CREATE TABLE TIER (
     id_tier                     VARCHAR(10)     PRIMARY KEY,
     nama                        VARCHAR(50)      NOT NULL,
@@ -445,7 +444,7 @@ VALUES
 CREATE TABLE MEMBER_AWARD_MILES_PACKAGE(
     id_award_miles_package VARCHAR(20),
     email_member VARCHAR(100),
-    waktu timestamp,
+    timestamp timestamp,
 
     PRIMARY KEY (id_award_miles_package, email_member, waktu),
     FOREIGN KEY (id_award_miles_package) REFERENCES AWARD_MILES_PACKAGE(id),

@@ -6,24 +6,6 @@ from django.db import connection
 from datetime import datetime, timedelta
 import re
 
-_BULAN = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
-
-def dictfetchall(cursor):
-    columns = [col[0] for col in cursor.description]
-    return [dict(zip(columns, row)) for row in cursor.fetchall()]
-
-def dictfetchone(cursor):
-    row = cursor.fetchone()
-    if row is None:
-        return None
-    columns = [col[0] for col in cursor.description]
-    return dict(zip(columns, row))
-
-def _fmt_date(d):
-    if isinstance(d, str):
-        d = datetime.strptime(d[:10], '%Y-%m-%d')
-    return f"{d.day:02d} {_BULAN[d.month]} {d.year}"
-
 def show_main(request):
     return render(request, "login.html")
 
@@ -110,7 +92,7 @@ def register_view(request):
         role = request.POST.get('role', 'member') 
         kode_maskapai = request.POST.get('kode_maskapai', '').strip()
         
-        # Define required fields
+        # Validasai field yang required
         required_fields = [
             email, password, confirm_password, salutation, first_mid_name, 
             last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan
@@ -219,6 +201,24 @@ def get_user_role(email):
 
     # Bukan keduanya
     return 'unknown'
+
+_BULAN = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
+
+def dictfetchall(cursor):
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+def dictfetchone(cursor):
+    row = cursor.fetchone()
+    if row is None:
+        return None
+    columns = [col[0] for col in cursor.description]
+    return dict(zip(columns, row))
+
+def _fmt_date(d):
+    if isinstance(d, str):
+        d = datetime.strptime(d[:10], '%Y-%m-%d')
+    return f"{d.day:02d} {_BULAN[d.month]} {d.year}"
 
 def dashboard(request):
     email = request.session.get('email')

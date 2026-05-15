@@ -2,6 +2,36 @@
 {% load custom_filters %}
 {% block title %}AeroMiles - Klaim Missing Miles{% endblock %}
 
+{% block extra_head %}
+<style>
+    .filter-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .filter-btn {
+        padding: .4rem .9rem;
+        border-radius: .5rem;
+        font-size: .85rem;
+        font-weight: 500;
+        text-decoration: none;
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+        background: var(--blue-primary) !important;
+        color: #fff !important;
+    }
+
+    .filter-btn:hover:not(.active) {
+        background: var(--blue-light);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-wrapper">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
@@ -12,15 +42,11 @@
         <button class="btn-primary" onclick="openModal('createModal')">+ Ajukan Klaim</button>
     </div>
 
-    <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;">
-        {% for s in 'Semua,Menunggu,Disetujui,Ditolak'|split:',' %}
-        <a href="?status={% if s != 'Semua' %}{{ s }}{% endif %}"
-        style="padding:.4rem .9rem;border-radius:.5rem;font-size:.85rem;font-weight:500;text-decoration:none;
-                background:{% if status_filter == s or s == 'Semua' and not status_filter %}var(--blue-primary){% else %}var(--bg-surface){% endif %};
-                color:{% if status_filter == s or s == 'Semua' and not status_filter %}#fff{% else %}var(--text-secondary){% endif %};">
-        {{ s }}
-        </a>
-        {% endfor %}
+    <div class="filter-group">
+        <a href="?status=" class="filter-btn {% if not status_filter %}active{% endif %}">Semua</a>
+        <a href="?status=Menunggu" class="filter-btn {% if status_filter == 'Menunggu' %}active{% endif %}">Menunggu</a>
+        <a href="?status=Disetujui" class="filter-btn {% if status_filter == 'Disetujui' %}active{% endif %}">Disetujui</a>
+        <a href="?status=Ditolak" class="filter-btn {% if status_filter == 'Ditolak' %}active{% endif %}">Ditolak</a>
     </div>
 
     {% if errors %}
@@ -47,17 +73,11 @@
                 {% for c in claims %}
                 <tr style="border-bottom:1px solid var(--border);transition:background .1s;" onmouseover="this.style.background='var(--bg-tint)'" onmouseout="this.style.background=''">
                     <td style="padding:.7rem 1rem;font-weight:600;color:var(--blue-primary);">CLM-{{ c.id|stringformat:'03d' }}</td>
-                    
                     <td style="padding:.7rem 1rem;">{{ c.nama_maskapai }}</td>
-                    
                     <td style="padding:.7rem 1rem;">{{ c.nama_asal }} → {{ c.nama_tujuan }}</td>
-                    
                     <td style="padding:.7rem 1rem;">{{ c.tanggal_penerbangan }}</td>
-
                     <td style="padding:.7rem 1rem;">{{ c.flight_number }}</td>
-                    
                     <td style="padding:.7rem 1rem;">{{ c.kelas_kabin }}</td>
-                    
                     <td style="padding:.7rem 1rem;">
                         {% if c.status_penerimaan == 'Disetujui' %}
                         <span style="background:#DCFCE7;color:#16A34A;padding:.2rem .6rem;border-radius:.4rem;font-size:.8rem;font-weight:600;">Disetujui</span>
@@ -67,9 +87,7 @@
                         <span style="background:#FEE2E2;color:#DC2626;padding:.2rem .6rem;border-radius:.4rem;font-size:.8rem;font-weight:600;">Ditolak</span>
                         {% endif %}
                     </td>
-                    
-                    <td style="padding:.7rem 1rem;font-size:.82rem;color:var(--text-secondary);">{{ c.waktu_penerbangan }}</td>
-                    
+                    <td style="padding:.7rem 1rem;font-size:.82rem;color:var(--text-secondary);">{{ c.timestamp|date:"d M Y H:i" }}</td>
                     <td style="padding:.7rem 1rem;">
                         {% if c.status_penerimaan == 'Menunggu' %}
                         <div style="display:flex;gap:.4rem;">
@@ -98,52 +116,52 @@
         </table>
         </div>
     </div>
-    </div>
+</div>
 
-    <div id="createModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+<div id="createModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-        <h2 style="font-size:1.1rem;">Ajukan Klaim Baru</h2>
-        <button onclick="closeModal('createModal')" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--text-secondary);">×</button>
+            <h2 style="font-size:1.1rem;">Ajukan Klaim Baru</h2>
+            <button onclick="closeModal('createModal')" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--text-secondary);">×</button>
         </div>
         <form method="post" action="{% url 'miles:claim_create' %}">
-        {% csrf_token %}
-        {% include '_claim_form_fields.html' with edit_mode=True maskapai_list=maskapai_list bandara_list=bandara_list %}
-        <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;">
-            <button type="button" class="btn-secondary" onclick="closeModal('createModal')">Batal</button>
-            <button type="submit" class="btn-primary">Ajukan</button>
-        </div>
+            {% csrf_token %}
+            {% include '_claim_form_fields.html' with edit_mode=True maskapai_list=maskapai_list bandara_list=bandara_list %}
+            <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;">
+                <button type="button" class="btn-secondary" onclick="closeModal('createModal')">Batal</button>
+                <button type="submit" class="btn-primary">Ajukan</button>
+            </div>
         </form>
     </div>
-    </div>
+</div>
 
-    <div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-        <h2 style="font-size:1.1rem;">Edit Klaim</h2>
-        <button onclick="closeModal('editModal')" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--text-secondary);">×</button>
+            <h2 style="font-size:1.1rem;">Edit Klaim</h2>
+            <button onclick="closeModal('editModal')" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--text-secondary);">×</button>
         </div>
         <form method="post" id="editForm" action="">
-        {% csrf_token %}
-        {% include '_claim_form_fields.html' with edit_mode=True %}
-        <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;">
-            <button type="button" class="btn-secondary" onclick="closeModal('editModal')">Batal</button>
-            <button type="submit" class="btn-primary">Simpan</button>
-        </div>
+            {% csrf_token %}
+            {% include '_claim_form_fields.html' with edit_mode=True %}
+            <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;">
+                <button type="button" class="btn-secondary" onclick="closeModal('editModal')">Batal</button>
+                <button type="submit" class="btn-primary">Simpan</button>
+            </div>
         </form>
     </div>
-    </div>
+</div>
 
-    <div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
         <h2 style="font-size:1.1rem;margin-bottom:.5rem;">Batalkan Klaim?</h2>
         <p class="text-muted text-sm" style="margin-bottom:1.5rem;">Klaim akan dihapus secara permanen.</p>
         <form method="post" id="deleteForm" action="">
-        {% csrf_token %}
-        <div style="display:flex;justify-content:flex-end;gap:.75rem;">
-            <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
-            <button type="submit" style="padding:.65rem 1.5rem;background:#DC2626;color:#fff;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:600;">Hapus</button>
-        </div>
+            {% csrf_token %}
+            <div style="display:flex;justify-content:flex-end;gap:.75rem;">
+                <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+                <button type="submit" style="padding:.65rem 1.5rem;background:#DC2626;color:#fff;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:600;">Hapus</button>
+            </div>
         </form>
     </div>
 </div>
@@ -179,5 +197,5 @@
     {% if show_modal %}
     openModal('createModal');
     {% endif %}
-    </script>
+</script>
 {% endblock %}
