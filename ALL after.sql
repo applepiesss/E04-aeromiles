@@ -512,7 +512,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 CREATE OR REPLACE TRIGGER trg_sinkronisasi_award_miles_package
 AFTER INSERT ON MEMBER_AWARD_MILES_PACKAGE
 FOR EACH ROW
@@ -898,8 +897,19 @@ INSERT INTO HADIAH (nama, miles, deskripsi, valid_start_date, program_end, id_pe
 ('Gratis Bagasi Pesawat 10kg', 2000, 'Tambahan kuota bagasi penerbangan domestik untuk kenyamanan liburan Anda.', '2025-01-01', '2025-12-31', 1),
 ('Akses Airport Premium Lounge', 3000, 'Akses gratis ke premium lounge di bandara selama maksimal 3 jam.', '2025-04-01', '2025-12-31', 2),
 ('Diskon Sewa Mobil 30%', 1500, 'Potongan untuk penyewaan mobil harian di berbagai kota besar.', '2025-05-01', '2025-10-31', 3),
-('Voucher Spa & Pijat 90 Menit', 2200, 'Paket relaksasi komplit di pusat spa eksklusif mitra kami.', '2025-07-01', '2025-12-31', 4);
-
+('Voucher Spa & Pijat 90 Menit', 2200, 'Paket relaksasi komplit di pusat spa eksklusif mitra kami.', '2025-07-01', '2025-12-31', 4),
+('Voucher Kopi Rp50.000', 500, 'Nikmati kopi gratis atau potongan harga di gerai partner kami.', '2026-05-01', '2026-06-30', 1),
+('Tiket Nonton Bioskop Premiere', 1200, 'Satu tiket nonton film premier di akhir pekan, berlaku di seluruh cabang.', '2026-05-01', '2026-07-15', 2),
+('Merchandise Kaos Eksklusif', 2500, 'Kaos edisi terbatas khusus untuk member loyalty program.', '2026-05-10', '2026-12-31', 3),
+('Diskon 20% Belanja Supermarket', 800, 'Potongan harga maksimal Rp100.000 untuk belanja bulanan Anda.', '2026-05-01', '2026-06-15', 4),
+('Voucher Menginap Hotel Bintang 4', 15000, 'Gratis menginap 1 malam untuk tipe kamar Deluxe (termasuk sarapan).', '2026-05-15', '2026-08-31', 5),
+('E-Money Saldo Rp100.000', 1000, 'Top up saldo e-money langsung ke nomor ponsel yang terdaftar.', '2026-01-01', '2027-01-01', 6),
+('Paket Liburan Bali 3H2M', 50000, 'Paket tour lengkap ke Bali untuk 1 orang, sudah termasuk tiket pesawat.', '2026-05-01', '2026-12-31', 7),
+('Voucher Makan Malam Romantis', 3500, 'Set menu fine dining untuk 2 orang di restoran mitra kami.', '2026-05-10', '2026-06-10', 8),
+('Gratis Bagasi Pesawat 10kg', 2000, 'Tambahan kuota bagasi penerbangan domestik untuk kenyamanan liburan Anda.', '2026-05-01', '2026-12-31', 1),
+('Akses Airport Premium Lounge', 3000, 'Akses gratis ke premium lounge di bandara selama maksimal 3 jam.', '2026-04-01', '2026-12-31', 2),
+('Diskon Sewa Mobil 30%', 1500, 'Potongan untuk penyewaan mobil harian di berbagai kota besar.', '2026-05-01', '2026-10-31', 3),
+('Voucher Spa & Pijat 90 Menit', 2200, 'Paket relaksasi komplit di pusat spa eksklusif mitra kami.', '2026-05-01', '2026-07-01', 4);
 
 CREATE TABLE REDEEM (
     email_member         VARCHAR(100)   NOT NULL,
@@ -915,6 +925,33 @@ CREATE OR REPLACE TRIGGER trg_validasi_redeem_hadiah
 BEFORE INSERT ON REDEEM
 FOR EACH ROW
 EXECUTE FUNCTION fn_validasi_redeem_hadiah();
+
+CREATE OR REPLACE FUNCTION fn_redeem_hadiah(
+    p_email VARCHAR(100),
+    p_kode_hadiah VARCHAR(20)
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_nama_hadiah VARCHAR(100);
+    v_miles_hadiah INT;
+BEGIN
+    -- Get hadiah info for message
+    SELECT nama, miles INTO v_nama_hadiah, v_miles_hadiah
+    FROM HADIAH
+    WHERE kode_hadiah = p_kode_hadiah;
+    
+    -- Insert into REDEEM table (validation via trigger)
+    INSERT INTO REDEEM (email_member, kode_hadiah, timestamp)
+    VALUES (p_email, p_kode_hadiah, NOW());
+    
+    -- Return success message matching trigger's NOTICE
+    RETURN 'SUKSES: Redeem hadiah "' || v_nama_hadiah || '" berhasil. Award miles Anda berkurang ' || v_miles_hadiah || ' miles.';
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN 'ERROR: ' || SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
 
 
 INSERT INTO REDEEM (email_member, kode_hadiah, timestamp) VALUES
