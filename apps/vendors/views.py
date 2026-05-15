@@ -20,7 +20,7 @@ def capture_db_notices(request):
 
 def manage_mitra_view(request):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM MITRA ORDER BY tanggal_kerja_sama DESC")
+        cursor.execute("SELECT * FROM aeromiles.MITRA ORDER BY tanggal_kerja_sama DESC")
         partners = dictfetchall(cursor)
     for p in partners:
         p['tanggal_kerja_sama_fmt'] = p['tanggal_kerja_sama'].strftime('%d %B %Y')
@@ -39,15 +39,15 @@ def save_mitra(request):
             try:
                 if is_update:
                     cursor.execute("""
-                        UPDATE MITRA SET nama_mitra = %s, tanggal_kerja_sama = %s 
+                        UPDATE aeromiles.MITRA SET nama_mitra = %s, tanggal_kerja_sama = %s 
                         WHERE email_mitra = %s
                     """, [nama, join_date, email])
                     messages.info(request, "Data mitra berhasil diperbarui.")
                 else:
-                    cursor.execute("INSERT INTO PENYEDIA DEFAULT VALUES RETURNING id")
+                    cursor.execute("INSERT INTO aeromiles.PENYEDIA DEFAULT VALUES RETURNING id")
                     id_penyedia = cursor.fetchone()[0]
                     cursor.execute("""
-                        INSERT INTO MITRA (email_mitra, id_penyedia, nama_mitra, tanggal_kerja_sama)
+                        INSERT INTO aeromiles.MITRA (email_mitra, id_penyedia, nama_mitra, tanggal_kerja_sama)
                         VALUES (%s, %s, %s, %s)
                     """, [email, id_penyedia, nama, join_date])
                     messages.success(request, f"Mitra {nama} berhasil didaftarkan.")
@@ -65,10 +65,10 @@ def delete_mitra(request):
         email = request.POST.get('email')
         with connection.cursor() as cursor:
             try:
-                cursor.execute("SELECT id_penyedia FROM MITRA WHERE email_mitra = %s", [email])
+                cursor.execute("SELECT id_penyedia FROM aeromiles.MITRA WHERE email_mitra = %s", [email])
                 row = cursor.fetchone()
                 if row:
-                    cursor.execute("DELETE FROM PENYEDIA WHERE id = %s", [row[0]])
+                    cursor.execute("DELETE FROM aeromiles.PENYEDIA WHERE id = %s", [row[0]])
                     messages.success(request, "Mitra berhasil dihapus.")
                 capture_db_notices(request)
             except Exception as e:
@@ -81,9 +81,9 @@ def daftar_hadiah(request):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT h.*, COALESCE(m.nama_mitra, mas.nama_maskapai) as nama_penyedia
-            FROM HADIAH h
-            LEFT JOIN MITRA m ON h.id_penyedia = m.id_penyedia
-            LEFT JOIN MASKAPAI mas ON h.id_penyedia = mas.id_penyedia
+            FROM aeromiles.HADIAH h
+            LEFT JOIN aeromiles.MITRA m ON h.id_penyedia = m.id_penyedia
+            LEFT JOIN aeromiles.MASKAPAI mas ON h.id_penyedia = mas.id_penyedia
             ORDER BY h.kode_hadiah DESC
         """)
         rewards = dictfetchall(cursor)
@@ -102,7 +102,7 @@ def daftar_hadiah(request):
             else:
                 r['status'], r['status_text'], r['badge_class'] = 'active', 'Aktif', 'badge-active'
 
-        cursor.execute("SELECT id_penyedia as id, nama_mitra as nama FROM MITRA UNION SELECT id_penyedia as id, nama_maskapai as nama FROM MASKAPAI")
+        cursor.execute("SELECT id_penyedia as id, nama_mitra as nama FROM aeromiles.MITRA UNION SELECT id_penyedia as id, nama_maskapai as nama FROM aeromiles.MASKAPAI")
         vendors = dictfetchall(cursor)
 
     return render(request, 'manajemen_hadiah_penyedia.html', {'rewards': rewards, 'vendors': vendors})
@@ -112,8 +112,8 @@ def delete_hadiah(request):
         kode = request.POST.get('kode')
         with connection.cursor() as cursor:
             try:
-                cursor.execute("DELETE FROM REDEEM WHERE kode_hadiah = %s", [kode])
-                cursor.execute("DELETE FROM HADIAH WHERE kode_hadiah = %s", [kode])
+                cursor.execute("DELETE FROM aeromiles.REDEEM WHERE kode_hadiah = %s", [kode])
+                cursor.execute("DELETE FROM aeromiles.HADIAH WHERE kode_hadiah = %s", [kode])
                 messages.success(request, "Hadiah berhasil dihapus.")
                 capture_db_notices(request)
             except Exception as e:
@@ -138,14 +138,14 @@ def save_hadiah(request):
             try:
                 if kode: 
                     cursor.execute("""
-                        UPDATE HADIAH SET nama=%s, miles=%s, deskripsi=%s, 
+                        UPDATE aeromiles.HADIAH SET nama=%s, miles=%s, deskripsi=%s, 
                         valid_start_date=%s, program_end=%s, id_penyedia=%s
                         WHERE kode_hadiah=%s
                     """, [nama, miles, desc, start, end, vendor_id, kode])
                     messages.info(request, "Hadiah berhasil diperbarui.")
                 else: 
                     cursor.execute("""
-                        INSERT INTO HADIAH (nama, miles, deskripsi, valid_start_date, program_end, id_penyedia)
+                        INSERT INTO aeromiles.HADIAH (nama, miles, deskripsi, valid_start_date, program_end, id_penyedia)
                         VALUES (%s, %s, %s, %s, %s, %s)
                     """, [nama, miles, desc, start, end, vendor_id])
                     messages.success(request, "Hadiah berhasil ditambahkan.")
