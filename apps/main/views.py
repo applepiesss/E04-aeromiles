@@ -1,45 +1,84 @@
+from django.db import DatabaseError
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
+from django.db import connection
 from datetime import datetime, timedelta
+import re
 
 def show_main(request):
     return render(request, "login.html")
 
 def login_view(request):
+    # Jika email sudah ada di session langsung redirect ke dashboard
     if request.session.get('email'):
         return redirect('main:dashboard')
 
+    error = None
+
+    # Ambil data dari form
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
-        error = None
 
-        user = DUMMY_PENGGUNA.get(email)
-        if not user or user['password'] != password:
-            error = 'Email atau password salah.'
-        else:
-            request.session['email'] = email
-            request.session['role'] = user['role']
-            request.session['nama'] = _nama(user)
-            return redirect('main:dashboard')
+        try:
+            with connection.cursor() as cursor:
+                # Panggil fn login pengguna
+                cursor.execute("SELECT fn_login_pengguna(%s, %s)", [email, password])
+                hasil_login = cursor.fetchone()[0]
 
-        return render(request, 'login.html', {'error': error, 'email': email})
+                # Jika sukses 
+                if hasil_login.startswith('SUKSES'):
+                    # Ambil email, salutation, first_mid_name, dan last_name
+                    cursor.execute("""
+                        SELECT email, salutation, first_mid_name, last_name 
+                        FROM PENGGUNA 
+                        WHERE lower(email) = lower(%s)
+                    """, [email])
+                    user = cursor.fetchone()
 
-    return render(request, 'login.html')
+                    # Set sessionnya 
+                    request.session['email'] = user[0]
+                    request.session['nama'] = f"{user[1]} {user[2]} {user[3]}"
+                    request.session['role'] = get_user_role(email)
+
+                    return redirect('main:dashboard')
+
+                # Jika gagal ambil message dari db
+                else:
+                    error = hasil_login
+
+        except Exception as e:
+            error = "Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi."
+
+    # Render dan tampilkan error message jika ada
+    return render(request, 'login.html', {'error': error})
 
 def logout_view(request):
     request.session.flush()
     return redirect('main:login')
 
 def register_view(request):
+    # Jika email sudah ada di session langsung redirect ke dashboard
     if request.session.get('email'):
         return redirect('main:dashboard')
 
-    maskapai_items = DUMMY_MASKAPAI.items()
+    # Ambil data maskapai untuk dropdown
+    maskapai_items = []
+    errors = []
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT kode_maskapai, nama_maskapai 
+                FROM MASKAPAI
+            ''')
+            maskapai_items = cursor.fetchall()
+    except Exception:
+        maskapai_items = []
 
     if request.method == 'POST':
-        role = request.POST.get('role', 'member')
+        # Ambil data dari form
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
         confirm_password = request.POST.get('confirm_password', '').strip()
@@ -50,54 +89,118 @@ def register_view(request):
         mobile_number = request.POST.get('mobile_number', '').strip()
         tanggal_lahir = request.POST.get('tanggal_lahir', '').strip()
         kewarganegaraan = request.POST.get('kewarganegaraan', '').strip()
+        role = request.POST.get('role', 'member') 
         kode_maskapai = request.POST.get('kode_maskapai', '').strip()
-
-        errors = []
-
-        required = [email, password, confirm_password, salutation,
-                    first_mid_name, last_name, country_code,
-                    mobile_number, tanggal_lahir, kewarganegaraan]
         
-        if any(not f for f in required):
+        # Define required fields
+        required_fields = [
+            email, password, confirm_password, salutation, first_mid_name, 
+            last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan
+        ]
+        if any(not f for f in required_fields):
             errors.append('Semua field wajib diisi.')
 
+        # Cek password match
         if password != confirm_password:
             errors.append('Password dan konfirmasi password tidak sama.')
 
-        if role == 'staff' and not kode_maskapai:
-            errors.append('Kode maskapai wajib dipilih untuk Staf.')
-        
-        if role == 'staff' and kode_maskapai and kode_maskapai not in DUMMY_MASKAPAI:
-            errors.append('Maskapai tidak valid.')
+        # Cek validasi maskapai untuk STAF
+        if role == 'staff':
+            if not kode_maskapai:
+                errors.append('Kode maskapai wajib dipilih untuk akun Staf.')
+            else:
+                valid_kodes = [item[0] for item in maskapai_items]
+                if kode_maskapai not in valid_kodes:
+                    errors.append('Maskapai tidak valid.')
 
+        # Cek validasi salutation
         if salutation not in ('Mr.', 'Mrs.', 'Ms.', 'Dr.'):
-            errors.append('Salutation tidak valid.')
+            errors.append('Salutation tidak valid (Gunakan Mr., Mrs., Ms., atau Dr.).')
 
+        # Cek validasi format kode negara
         if country_code and not re.match(r'^\+\d+$', country_code):
             errors.append('Kode negara harus diawali "+" diikuti angka (contoh: +62).')
+        
+        # Cek validasi format nomor hp
+        if mobile_number:
+            if not mobile_number.isdigit():
+                errors.append('Nomor HP hanya boleh berisi angka.')
+            elif not (9 <= len(mobile_number) <= 13):
+                errors.append('Nomor HP harus berjumlah 9 hingga 13 digit.')
 
-        if mobile_number and not mobile_number.isdigit():
-            errors.append('Nomor HP hanya boleh berisi angka.')
-
-        if mobile_number and not (9 <= len(mobile_number) <= 13):
-            errors.append('Nomor HP harus berjumlah 9 hingga 13 digit.')
-
+        # INSERT ke db jika sudah tdk ada error
         if not errors:
-            messages.success(request, 'Registrasi berhasil! Silakan login.')
-            return redirect('main:login')
+            try:
+                with connection.cursor() as cursor:
+                    # INSERT ke PENGGUNA
+                    cursor.execute('''
+                        INSERT INTO PENGGUNA 
+                        (email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ''', [email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan])
+                    
+                    # INSERT ke MEMBER
+                    if role == 'member':                        
+                        cursor.execute('''
+                            INSERT INTO MEMBER (email, tanggal_bergabung, id_tier)
+                            VALUES (%s, CURRENT_DATE, 'TIR-BLU')
+                        ''', [email])
+                
+                    # INSERT KE STAF
+                    else:
+                        cursor.execute('''
+                            INSERT INTO STAF (email, kode_maskapai)
+                            VALUES (%s, %s)
+                        ''', [email, kode_maskapai])
+                        
+                messages.success(request, 'Registrasi berhasil! Silakan login.')
+                return redirect('main:login')
 
-        return render(request, 'register.html', {
-            'errors': errors,
-            'maskapai_list': maskapai_items, 
-            'role': role,
-            'form': request.POST,
-        })
+            # Exception handling
+            except DatabaseError as e:
+                error_msg = str(e)
 
+                if 'ERROR:' in error_msg:
+                    parts = error_msg.split('ERROR:')
+                    actual_error_message = parts[1].split('\n')[0].strip()
+
+                    errors.append(actual_error_message)
+                else:
+                    errors.append("Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.")
+            except Exception:
+                errors.append("Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.")
+
+    # Render halaman jika ada error atau request GET
     return render(request, 'register.html', {
+        'errors': errors,
         'maskapai_list': maskapai_items, 
-        'role': 'member',
-        'form': {},
+        'role': role if request.method == 'POST' else 'member',
+        'form': request.POST if request.method == 'POST' else {},
     })
+
+# Helper untuk cek role user
+def get_user_role(email):
+    with connection.cursor() as cursor:
+        # Cek role member
+        cursor.execute('''
+            SELECT email 
+            FROM MEMBER 
+            WHERE lower(email) = lower(%s)
+        ''', [email])
+        if cursor.fetchone():
+            return 'member'
+
+        # Cek role staf
+        cursor.execute('''
+            SELECT email 
+            FROM STAF 
+            WHERE lower(email) = lower(%s)
+        ''', [email])
+        if cursor.fetchone():
+            return 'staff'
+
+    # Bukan keduanya
+    return 'unknown'
 
 def dashboard(request):
     email = request.session.get('email')
