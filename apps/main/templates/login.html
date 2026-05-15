@@ -28,7 +28,8 @@
                 <div class="form-group">
                     <label class="form-label">Email</label>
                     <input type="email" name="email" class="form-control"
-                            placeholder="email@example.com" value="{{ email|default:'' }}" required>
+                            placeholder="email@example.com"
+                            value="{{ request.POST.email }}" required> 
                 </div>
 
                 <div class="form-group">
