@@ -476,6 +476,43 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION fn_buy_award_miles_package(
+    p_id_award_miles_package VARCHAR(20),
+    p_email_member VARCHAR(100)
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_jumlah_award_miles INT;
+    v_paket_id VARCHAR(20);
+    v_pesan TEXT;
+BEGIN
+    -- Validasi paket exists
+    SELECT id, jumlah_award_miles
+    INTO v_paket_id, v_jumlah_award_miles
+    FROM AWARD_MILES_PACKAGE
+    WHERE id = p_id_award_miles_package;
+    
+    IF v_paket_id IS NULL THEN
+        RETURN 'ERROR: Paket tidak ditemukan.';
+    END IF;
+    
+    -- Validasi member exists
+    IF NOT EXISTS (SELECT 1 FROM MEMBER WHERE email = p_email_member) THEN
+        RETURN 'ERROR: Member tidak ditemukan.';
+    END IF;
+    
+    -- Insert transaksi ke MEMBER_AWARD_MILES_PACKAGE
+    INSERT INTO MEMBER_AWARD_MILES_PACKAGE 
+    (id_award_miles_package, email_member, timestamp)
+    VALUES (p_id_award_miles_package, p_email_member, NOW());
+    
+    -- Return pesan success
+    v_pesan := 'SUKSES: Pembelian package berhasil. Award miles dan total miles Anda bertambah ' || v_jumlah_award_miles || ' miles.';
+    RETURN v_pesan;
+END;
+$$ LANGUAGE plpgsql;
+
+
 CREATE OR REPLACE TRIGGER trg_sinkronisasi_award_miles_package
 AFTER INSERT ON MEMBER_AWARD_MILES_PACKAGE
 FOR EACH ROW
