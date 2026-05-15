@@ -275,7 +275,7 @@
                 <li><a href="#">Redeem Hadiah</a></li>
                 <li><a href="#">Beli Package</a></li>
                 <li><a href="#">Info Tier</a></li>
-                <li><a href="#">Profil</a></li>
+                <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
         
             {% elif request.session.role == 'staff' %}
@@ -287,7 +287,7 @@
                 <li><a href="http://127.0.0.1:8000/vendors/katalog_hadiah/">Kelola Hadiah</a></li>
                 <li><a href="http://127.0.0.1:8000/vendors/manajemen-mitra/">Kelola Mitra</a></li>
                 <li><a href="#">Laporan Transaksi</a></li>
-                <li><a href="#">Profil</a></li>
+                <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
             {% endif %}
         </ul>
