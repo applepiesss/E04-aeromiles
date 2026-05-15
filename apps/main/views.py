@@ -357,6 +357,10 @@ def dashboard(request):
 
     return render(request, 'dashboard.html', context)
 
+STAFF_DATA = []
+MEMBER_DATA = []
+SALUTATION_CHOICES = []
+
 @require_http_methods(["GET", "POST"])
 def profile_settings(request):
     """Display and handle profile settings mockup"""
