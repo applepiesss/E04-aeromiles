@@ -272,7 +272,7 @@
                 <li><a href="{% url 'members:identitas' %}" {% if request.path == '/members/identitas/' %}class="active"{% endif %}>Identitas Saya</a></li>
                 <li><a href="#">Klaim Miles</a></li>
                 <li><a href="#">Transfer Miles</a></li>
-                <li><a href="#">Redeem Hadiah</a></li>
+                <li><a href="{% url 'rewards:redeem_hadiah' %}">Redeem Hadiah</a></li>
                 <li><a href="{% url 'miles:buy_miles_package' %}">Beli Package</a></li>
                 <li><a href="{% url 'members:tier_info' %}">Info Tier</a></li>
                 <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
