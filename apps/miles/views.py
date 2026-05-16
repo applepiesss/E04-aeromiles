@@ -1,3 +1,4 @@
+from django.db import DatabaseError
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
@@ -533,7 +534,7 @@ def transfer_create(request):
                     WHERE email = %s
                 ''', [email_pengirim])
                 award_miles = cursor.fetchone()[0]
-                
+
             return render(request, 'transfer.html', {
                 'transfers': [],
                 'award_miles': award_miles,
@@ -543,12 +544,6 @@ def transfer_create(request):
 
         return redirect('miles:transfer_list')
     return redirect('miles:transfer_list')
-
-from django.views.decorators.http import require_http_methods
-from django.contrib import messages
-from datetime import datetime
-from django.db import connection, DatabaseError
-
 
 def dictfetchall(cursor):
     """Convert database rows to list of dicts"""

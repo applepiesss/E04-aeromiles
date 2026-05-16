@@ -3,8 +3,9 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db import connection
-from datetime import datetime, timedelta, date
+from datetime import datetime, date
 import re
+import bcrypt
 
 def show_main(request):
     return render(request, "login.html")
@@ -14,10 +15,14 @@ def login_view(request):
     if request.session.get('email'):
         return redirect('main:dashboard')
 
+    # Jika email sudah ada di session langsung logout
+    elif request.session.get('email'):
+        request.session.flush()
+
     error = None
 
-    # Ambil data dari form
     if request.method == 'POST':
+        # Ambil data dari form
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
 
@@ -136,10 +141,12 @@ def register_view(request):
                     # INSERT ke PENGGUNA
                     cursor.execute('''
                         INSERT INTO PENGGUNA 
-                        (email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ''', [email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan])
-                    
+                            (email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan)
+                        VALUES (%s, crypt(%s, gen_salt('bf')), %s, %s, %s, %s, %s, %s, %s)
+                    ''', [
+                        email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan
+                    ])
+
                     # INSERT ke MEMBER
                     if role == 'member':                        
                         cursor.execute('''
@@ -159,15 +166,7 @@ def register_view(request):
 
             # Exception handling
             except DatabaseError as e:
-                error_msg = str(e)
-
-                if 'ERROR:' in error_msg:
-                    parts = error_msg.split('ERROR:')
-                    actual_error_message = parts[1].split('\n')[0].strip()
-
-                    errors.append(actual_error_message)
-                else:
-                    errors.append("Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.")
+                errors.append(str(e))
             except Exception:
                 errors.append("Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.")
 
@@ -549,22 +548,34 @@ def change_password(request):
             with connection.cursor() as cursor:
                 # Verify old password
                 cursor.execute("""
-                    SELECT password FROM PENGGUNA WHERE email = %s
+                    SELECT password 
+                    FROM PENGGUNA 
+                    WHERE email = %s
                 """, [email])
                 result = cursor.fetchone()
                 
                 if not result:
                     errors['old_password'] = 'Pengguna tidak ditemukan'
-                elif result[0] != old_password:
-                    errors['old_password'] = 'Password lama tidak sesuai'
                 else:
-                    # Update password
+                    # Cek apakah password lama sesuai
                     cursor.execute("""
-                        UPDATE PENGGUNA SET password = %s WHERE email = %s
-                    """, [new_password, email])
-                    
-                    messages.success(request, 'Password Anda berhasil diubah.')
-                    return redirect('main:profile_settings' + ('?type=staff' if role == 'staff' else ''))
+                        SELECT crypt(%s, %s) = %s
+                    """, [old_password, result[0], result[0]])
+                    is_password_match = cursor.fetchone()[0]
+
+                    if not is_password_match:
+                        errors['old_password'] = 'Password lama tidak sesuai'
+
+                    # Update password
+                    else:
+                        cursor.execute("""
+                            UPDATE PENGGUNA 
+                            SET password = crypt(%s, gen_salt('bf'))
+                            WHERE email = %s
+                        """, [new_password, email])
+                        
+                        messages.success(request, 'Password Anda berhasil diubah.')
+                        return redirect('main:profile_settings' + ('?type=staff' if role == 'staff' else ''))
         
         except DatabaseError as e:
             error_msg = str(e)
