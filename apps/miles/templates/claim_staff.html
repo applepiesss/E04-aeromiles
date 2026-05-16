@@ -1,6 +1,36 @@
 {% extends 'base.html' %}
 {% block title %}AeroMiles - Kelola Klaim{% endblock %}
 
+{% block extra_head %}
+<style>
+    .filter-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .filter-btn {
+        padding: .4rem .9rem;
+        border-radius: .5rem;
+        font-size: .85rem;
+        font-weight: 500;
+        text-decoration: none;
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+        background: var(--blue-primary) !important;
+        color: #fff !important;
+    }
+
+    .filter-btn:hover:not(.active) {
+        background: var(--blue-light);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-wrapper">
     <div style="margin-bottom:1.5rem;">
@@ -10,14 +40,11 @@
 
     <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
     <form method="get" style="display:flex; gap:1rem; flex-wrap:wrap; align-items: flex-end;">
-        <div style="display:flex; flex-direction:column; gap:0.3rem;">
-            <label class="text-xs text-muted" style="font-weight:600;">Status</label>
-            <select name="status" class="form-control" style="width:auto; min-width:140px;">
-                <option value="">Semua Status</option>
-                {% for s in 'Menunggu,Disetujui,Ditolak'|split:',' %}
-                <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
-                {% endfor %}
-            </select>
+        <div class="filter-group">
+            <a href="?status=" class="filter-btn {% if not status_filter %}active{% endif %}">Semua</a>
+            <a href="?status=Menunggu" class="filter-btn {% if status_filter == 'Menunggu' %}active{% endif %}">Menunggu</a>
+            <a href="?status=Disetujui" class="filter-btn {% if status_filter == 'Disetujui' %}active{% endif %}">Disetujui</a>
+            <a href="?status=Ditolak" class="filter-btn {% if status_filter == 'Ditolak' %}active{% endif %}">Ditolak</a>
         </div>
 
         <div style="display:flex; flex-direction:column; gap:0.3rem;">
