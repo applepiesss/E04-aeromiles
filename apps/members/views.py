@@ -36,6 +36,19 @@ TIER_BENEFITS = {
     ],
 }
 
+BULAN_ID = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
+
+
+def _fmt_tanggal(iso_str):
+    try:
+        if isinstance(iso_str, datetime.date):
+            d = iso_str
+        else:
+            d = datetime.date.fromisoformat(iso_str)
+        return f"{d.day:02d} {BULAN_ID[d.month]} {d.year}"
+    except Exception:
+        return iso_str
+
 
 def dictfetchall(cursor):
     """Convert database rows to list of dicts"""
@@ -167,34 +180,7 @@ def tier_info(request):
     }
     
     return render(request, 'tier_info.html', context)
-from django.shortcuts import redirect, render
-import datetime
 
-BULAN_ID = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
-
-def _fmt_tanggal(iso_str):
-    try:
-        if isinstance(iso_str, datetime.date):
-            d = iso_str
-        else:
-            d = datetime.date.fromisoformat(iso_str)
-        return f"{d.day:02d} {BULAN_ID[d.month]} {d.year}"
-    except Exception:
-        return iso_str
-
-DUMMY_TIER = {
-    'TIR-BLU': 'Blue',
-    'TIR-SLV': 'Silver',
-    'TIR-GLD': 'Gold',
-    'TIR-PLT': 'Platinum',
-}
-
-def _nama(p):
-    return f"{p['salutation']} {p['first_mid_name']} {p['last_name']}"
-
-def dictfetchall(cursor):
-    columns = [col[0] for col in cursor.description]
-    return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 def kelola_member(request):
     if request.session.get('role') != 'staff':
@@ -227,6 +213,7 @@ def kelola_member(request):
         })
 
     return render(request, 'kelola_member.html', {'members': members})
+
 
 @require_http_methods(["POST"])
 def tambah_member(request):
@@ -270,6 +257,7 @@ def tambah_member(request):
         messages.error(request, 'Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.')
 
     return redirect('members:kelola_member')
+
 
 @require_http_methods(["POST"])
 def edit_member(request, nomor):
@@ -323,6 +311,7 @@ def edit_member(request, nomor):
 
     return redirect('members:kelola_member')
 
+
 @require_http_methods(["POST"])
 def hapus_member(request, nomor):
     if request.session.get('role') != 'staff':
@@ -357,6 +346,7 @@ def hapus_member(request, nomor):
 
     return redirect('members:kelola_member')
 
+
 def _build_identitas(raw_list):
     today = datetime.date.today()
     result = []
@@ -368,7 +358,7 @@ def _build_identitas(raw_list):
         if never_expires:
             status = 'Aktif'
             status_class = 'badge-aktif'
-            tanggal_habis_display = 'Tidak Kedaluwarsa'
+            tanggal_habis_display = 'Berlaku Seumur Hidup'
         elif habis_date >= today:
             status = 'Aktif'
             status_class = 'badge-aktif'
@@ -387,24 +377,141 @@ def _build_identitas(raw_list):
         })
     return result
 
+
 def identitas(request):
     if request.session.get('role') != 'member':
         return redirect('main:dashboard')
+    
     email = request.session.get('email', '')
-    raw = IDENTITAS_LIST.get(email, [])
-    return render(request, 'identitas.html', {'identitas_list': _build_identitas(raw)})
 
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT nomor, jenis, negara_penerbit, tanggal_terbit, tanggal_habis
+                FROM IDENTITAS
+                WHERE email_member = %s
+                ORDER BY tanggal_terbit DESC
+            """, [email])
+            rows = dictfetchall(cursor)
+    except Exception:
+        rows = []
+
+    for r in rows:
+        r['tanggal_terbit_iso'] = str(r['tanggal_terbit'])[:10] if r['tanggal_terbit'] else ''
+        r['tanggal_habis_iso']  = str(r['tanggal_habis'])[:10] if r['tanggal_habis'] else ''
+        r['tanggal_terbit'] = r['tanggal_terbit_iso']
+        r['tanggal_habis']  = r['tanggal_habis_iso']
+
+    return render(request, 'identitas.html', {'identitas_list': _build_identitas(rows)})
+
+
+@require_http_methods(["POST"])
 def tambah_identitas(request):
-    if request.method == 'POST':
-        pass
+    if request.session.get('role') != 'member':
+        return redirect('main:dashboard')
+
+    email = request.session.get('email', '')
+    nomor = request.POST.get('nomor', '').strip()
+    jenis = request.POST.get('jenis', '').strip()
+    negara_penerbit = request.POST.get('negara_penerbit', '').strip()
+    tanggal_terbit = request.POST.get('tanggal_terbit', '').strip()
+    tanggal_habis = request.POST.get('tanggal_habis', '').strip()
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO IDENTITAS
+                (nomor, email_member, tanggal_habis, tanggal_terbit, negara_penerbit, jenis)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, [nomor, email, tanggal_habis, tanggal_terbit, negara_penerbit, jenis])
+
+        messages.success(request, f'Identitas {nomor} berhasil ditambahkan.')
+
+    except DatabaseError as e:
+        err = str(e)
+        if 'duplicate key' in err.lower() or 'unique' in err.lower():
+            messages.error(request, f'Nomor dokumen "{nomor}" sudah terdaftar di sistem.')
+        elif 'check constraint' in err.lower() or 'identitas_jenis_check' in err.lower():
+            messages.error(request, 'Jenis dokumen tidak valid (gunakan Paspor, KTP, atau SIM).')
+        elif 'ERROR:' in err:
+            pesan = err.split('ERROR:')[1].split('\n')[0].strip()
+            messages.error(request, pesan)
+        else:
+            messages.error(request, 'Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.')
+    except Exception:
+        messages.error(request, 'Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.')
+
     return redirect('members:identitas')
 
+
+@require_http_methods(["POST"])
 def edit_identitas(request, nomor):
-    if request.method == 'POST':
-        pass
+    if request.session.get('role') != 'member':
+        return redirect('main:dashboard')
+
+    email = request.session.get('email', '')
+    tanggal_terbit = request.POST.get('tanggal_terbit', '').strip()
+    tanggal_habis  = request.POST.get('tanggal_habis', '').strip()
+
+    try:
+        with connection.cursor() as cursor:
+            # Pastikan identitas milik member yang sedang login
+            cursor.execute("""
+                SELECT 1 FROM IDENTITAS
+                WHERE nomor = %s AND email_member = %s
+            """, [nomor, email])
+            if not cursor.fetchone():
+                messages.error(request, 'Identitas tidak ditemukan atau bukan milik Anda.')
+                return redirect('members:identitas')
+
+            cursor.execute("""
+                UPDATE IDENTITAS
+                SET tanggal_terbit = %s, tanggal_habis = %s
+                WHERE nomor = %s AND email_member = %s
+            """, [tanggal_terbit, tanggal_habis, nomor, email])
+
+        messages.success(request, f'Identitas {nomor} berhasil diperbarui.')
+
+    except DatabaseError as e:
+        err = str(e)
+        if 'ERROR:' in err:
+            pesan = err.split('ERROR:')[1].split('\n')[0].strip()
+            messages.error(request, pesan)
+        else:
+            messages.error(request, 'Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.')
+    except Exception:
+        messages.error(request, 'Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.')
+
     return redirect('members:identitas')
 
+
+@require_http_methods(["POST"])
 def hapus_identitas(request, nomor):
-    if request.method == 'POST':
-        pass
+    if request.session.get('role') != 'member':
+        return redirect('main:dashboard')
+
+    email = request.session.get('email', '')
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                DELETE FROM IDENTITAS
+                WHERE nomor = %s AND email_member = %s
+            """, [nomor, email])
+
+            if cursor.rowcount == 0:
+                messages.error(request, 'Identitas tidak ditemukan atau bukan milik Anda.')
+            else:
+                messages.success(request, f'Identitas {nomor} berhasil dihapus.')
+
+    except DatabaseError as e:
+        err = str(e)
+        if 'ERROR:' in err:
+            pesan = err.split('ERROR:')[1].split('\n')[0].strip()
+            messages.error(request, pesan)
+        else:
+            messages.error(request, 'Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.')
+    except Exception:
+        messages.error(request, 'Terjadi gangguan pada sistem. Silakan coba beberapa saat lagi.')
+
     return redirect('members:identitas')
