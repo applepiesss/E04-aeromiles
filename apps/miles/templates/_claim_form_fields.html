@@ -1,0 +1,68 @@
+{% load i18n %}
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label">Maskapai</label>
+        <select name="maskapai" class="form-control" required>
+            <option value="">Pilih maskapai</option>
+            {% for m in maskapai_list %}
+            <option value="{{ m.0 }}"> {{ m.0 }} – {{ m.1 }} </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Kelas Kabin</label>
+        <select name="kelas_kabin" class="form-control" required>
+            <option value="">Pilih kelas</option>
+            <option value="Economy">Economy</option>
+            <option value="Business">Business</option>
+            <option value="First">First</option>
+        </select>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label">Bandara Asal</label>
+        <select name="bandara_asal" class="form-control" required>
+            <option value="">Pilih bandara</option>
+            {% for b in bandara_list %}
+            <option value="{{ b.0 }}">{{ b.0 }} – {{ b.2 }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Bandara Tujuan</label>
+        <select name="bandara_tujuan" class="form-control" required>
+            <option value="">Pilih bandara</option>
+            {% for b in bandara_list %}
+            <option value="{{ b.0 }}">{{ b.0 }} – {{ b.2 }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label">Tanggal Penerbangan</label>
+        <input type="date" name="tanggal_penerbangan" class="form-control"
+            value="{{ form.tanggal_penerbangan|default:'' }}" required>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Flight Number</label>
+        <input type="text" name="flight_number" class="form-control"
+            value="{{ form.flight_number|default:'' }}" required>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label">Nomor Tiket</label>
+        <input type="text" name="nomor_tiket" class="form-control"
+            value="{{ form.nomor_tiket|default:'' }}" required>
+    </div>
+    <div class="form-group">
+        <label class="form-label">PNR</label>
+        <input type="text" name="pnr" class="form-control"
+            value="{{ form.pnr|default:'' }}" required>
+    </div>
+</div>

@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+
+{% block title %}Pengaturan Profil - AeroMiles{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Profile-specific styling */
+    .profile-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-page-header h1 {
+        font-size: 2rem;
+        margin: 0;
+    }
+
+    .profile-page-header p {
+        color: var(--text-secondary);
+        margin: 0.25rem 0 0 0;
+    }
+
+    /* User Type Indicator Badge */
+    .user-type-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, var(--blue-light), var(--border));
+        color: var(--text-primary);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Form Sections */
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-row.full {
+        grid-template-columns: 1fr;
+    }
+
+    /* Form help text */
+    .form-help {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-top: 0.4rem;
+    }
+
+    /* Override form-control for disabled state */
+    .form-control:disabled {
+        background-color: var(--bg-tint);
+        color: var(--text-secondary);
+        cursor: not-allowed;
+    }
+
+    /* Action buttons section */
+    .profile-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+
+    .profile-actions .btn-change-password {
+        order: -1;
+    }
+
+    .profile-actions-right {
+        display: flex;
+        gap: 0.75rem;
+        margin-left: auto;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background: var(--white);
+        border: 1px solid var(--border);
+        padding: 2rem;
+        border-radius: var(--radius-xl);
+        box-shadow: 0 20px 25px rgba(74, 144, 226, 0.15), 0 10px 10px rgba(74, 144, 226, 0.1);
+        width: 90%;
+        max-width: 450px;
+        animation: slideUp 0.3s ease;
+        position: relative;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--text-primary);
+    }
+
+    .modal-header .close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.15s;
+    }
+
+    .modal-header .close:hover {
+        color: var(--blue-primary);
+    }
+
+    .modal-body {
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        border-top: 1px solid var(--border);
+        padding-top: 1rem;
+    }
+
+    /* Info Box */
+    .info-box {
+        background-color: var(--bg-tint);
+        border-left: 4px solid var(--blue-primary);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1.25rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .info-box strong {
+        color: var(--text-primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .profile-actions {
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .profile-actions .btn-change-password {
+            width: 100%;
+            order: 0;
+        }
+
+        .profile-actions-right {
+            width: 100%;
+            flex-direction: column-reverse;
+            margin-left: 0;
+        }
+
+        .profile-actions-right .btn {
+            width: 100%;
+        }
+
+        .modal-content {
+            width: 95%;
+            max-width: 90vw;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <!-- Page Header -->
+    <div class="profile-page-header">
+        <div>
+            <h1>Pengaturan Profil</h1>
+            <p>Kelola informasi profil dan keamanan akun Anda</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div>
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="alert alert-success">{{ message }}</div>
+            {% elif message.tags == 'error' %}
+                <div class="alert alert-error">{{ message }}</div>
+            {% else %}
+                <div class="alert alert-error">{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Profile Card -->
+    <div class="card">
+        <!-- User Type Badge -->
+        <div class="user-type-badge">
+            {% if is_staff %}
+                STAF 
+            {% else %}
+                MEMBER
+            {% endif %}
+        </div>
+
+        <!-- Edit Mode Toggle Button -->
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 0.75rem;">
+            <button type="button" id="editButton" class="btn-primary" onclick="enableEditMode()" style="display: none;">
+                Edit Profil
+            </button>
+            <button type="button" id="cancelEditButton" class="btn-secondary" onclick="disableEditMode()" style="display: none;">
+                Batal Edit
+            </button>
+        </div>
+
+        <!-- Profile Form -->
+        <form id="profileForm" method="POST" action="{% url 'main:profile_settings' %}?type={{ user_type }}">
+            {% csrf_token %}
+
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <div class="section-title">Informasi Pribadi</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="salutation">Sapaan <span style="color: #E74C3C;">*</span></label>
+                        <select id="salutation" class="form-control" name="salutation" required disabled>
+                            <option value="">-- Pilih Sapaan --</option>
+                            {% for choice in salutation_choices %}
+                                <option value="{{ choice }}" {% if profile.salutation == choice %}selected{% endif %}>
+                                    {{ choice }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="first_mid_name">Nama Depan & Tengah <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="first_mid_name" class="form-control" name="first_mid_name" 
+                               value="{{ profile.first_mid_name }}" required disabled>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="last_name">Nama Belakang <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="last_name" class="form-control" name="last_name" 
+                               value="{{ profile.last_name }}" required disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="date_of_birth">Tanggal Lahir <span style="color: #E74C3C;">*</span></label>
+                        <input type="date" id="date_of_birth" class="form-control" name="date_of_birth" 
+                               value="{{ profile.date_of_birth }}" required disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <div class="section-title">Informasi Kontak</div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email <span style="color: #E74C3C;">*</span></label>
+                        <input type="email" id="email" class="form-control" name="email" 
+                               value="{{ profile.email }}" disabled readonly>
+                        <div class="form-help">Email tidak dapat diubah untuk keamanan akun Anda</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="country_code">Kode Negara <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="country_code" class="form-control" name="country_code" 
+                               value="{{ profile.country_code }}" placeholder="+62" required disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="mobile_number">Nomor Telepon <span style="color: #E74C3C;">*</span></label>
+                        <input type="tel" id="mobile_number" class="form-control" name="mobile_number" 
+                               value="{{ profile.mobile_number }}" required disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="form-section">
+                <div class="section-title">Informasi Tambahan</div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label" for="kewarganegaraan">Kewarganegaraan <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="kewarganegaraan" class="form-control" name="kewarganegaraan" 
+                               value="{{ profile.kewarganegaraan }}" required disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Only Information -->
+            {% if not is_staff %}
+            <div class="form-section">
+                <div class="section-title">Informasi Member</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="member_number">Nomor Member <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="member_number" class="form-control" name="member_number" 
+                               value="{{ profile.member_number }}" disabled readonly>
+                        <div class="form-help">Nomor member tidak dapat diubah</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="join_date">Tanggal Bergabung <span style="color: #E74C3C;">*</span></label>
+                        <input type="date" id="join_date" class="form-control" name="join_date" 
+                               value="{{ profile.join_date }}" disabled readonly>
+                        <div class="form-help">Tanggal bergabung tidak dapat diubah</div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Staff Only Information -->
+            <div class="form-section">
+                <div class="section-title">Informasi Staf</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="staff_id">ID Staf <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="staff_id" class="form-control" name="staff_id" 
+                               value="{{ profile.staff_id }}" disabled readonly>
+                        <div class="form-help">ID staf tidak dapat diubah</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="airline_code">Kode Maskapai <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="airline_code" class="form-control" name="airline_code" 
+                               value="{{ profile.airline_code }}" placeholder="GA" required disabled>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="profile-actions">
+                <button type="button" class="btn-secondary btn-change-password" onclick="openPasswordModal()">
+                    Ubah Password
+                </button>
+
+                <div class="profile-actions-right">
+                    <button type="submit" id="saveButton" class="btn-primary" style="display: none;">Simpan Perubahan</button>
+                    <button type="button" id="viewModeButton" class="btn-primary" onclick="enableEditMode()" style="display: none;">Edit Profil</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Password Change Modal -->
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Ubah Password</h2>
+            <button type="button" class="close" onclick="closePasswordModal()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="info-box">
+                <strong>Keamanan Akun:</strong> Gunakan password yang kuat dan unik untuk melindungi akun Anda.
+            </div>
+
+            <form id="passwordForm" method="POST" action="{% url 'main:change_password' %}?type={{ user_type }}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label" for="old_password">Password Lama <span style="color: #E74C3C;">*</span></label>
+                    <input type="password" id="old_password" class="form-control" name="old_password" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="new_password">Password Baru <span style="color: #E74C3C;">*</span></label>
+                    <input type="password" id="new_password" class="form-control" name="new_password" 
+                           placeholder="Minimal 8 karakter" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Konfirmasi Password Baru <span style="color: #E74C3C;">*</span></label>
+                    <input type="password" id="confirm_password" class="form-control" name="confirm_password" 
+                           placeholder="Ulangi password baru" required>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closePasswordModal()">Batal</button>
+            <button type="submit" form="passwordForm" class="btn-primary">Perbarui Password</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get all form inputs that should be editable
+    const editableFields = [
+        'salutation', 'first_mid_name', 'last_name', 'country_code', 
+        'mobile_number', 'kewarganegaraan'
+    ];
+
+    function enableEditMode() {
+        // Enable all editable fields
+        editableFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.disabled = false;
+            }
+        });
+
+        // Show/hide buttons
+        document.getElementById('editButton').style.display = 'none';
+        document.getElementById('cancelEditButton').style.display = 'inline-block';
+        document.getElementById('viewModeButton').style.display = 'none';
+        document.getElementById('saveButton').style.display = 'inline-block';
+        
+        // Scroll to top
+        document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function disableEditMode() {
+        // Disable all editable fields
+        editableFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.disabled = true;
+            }
+        });
+
+        // Show/hide buttons
+        document.getElementById('editButton').style.display = 'none';
+        document.getElementById('cancelEditButton').style.display = 'none';
+        document.getElementById('viewModeButton').style.display = 'inline-block';
+        document.getElementById('saveButton').style.display = 'none';
+    }
+
+    function openPasswordModal() {
+        const modal = document.getElementById('passwordModal');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePasswordModal() {
+        const modal = document.getElementById('passwordModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+        document.getElementById('passwordForm').reset();
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('passwordModal');
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closePasswordModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closePasswordModal();
+            }
+        });
+
+        // Initialize: show Edit Profil button on page load
+        disableEditMode();
+
+        // Auto-hide messages after 5 seconds
+        const messages = document.querySelectorAll('.alert');
+        messages.forEach(function(message) {
+            setTimeout(function() {
+                message.style.opacity = '0';
+                message.style.transition = 'opacity 0.3s ease';
+                setTimeout(function() {
+                    message.remove();
+                }, 300);
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

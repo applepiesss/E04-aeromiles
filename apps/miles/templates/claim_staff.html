@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}AeroMiles - Kelola Klaim{% endblock %}
+
+{% block extra_head %}
+<style>
+    .filter-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .filter-btn {
+        padding: .4rem .9rem;
+        border-radius: .5rem;
+        font-size: .85rem;
+        font-weight: 500;
+        text-decoration: none;
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+        background: var(--blue-primary) !important;
+        color: #fff !important;
+    }
+
+    .filter-btn:hover:not(.active) {
+        background: var(--blue-light);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div style="margin-bottom:1.5rem;">
+        <h1 style="font-size:1.4rem;margin-bottom:.2rem;">Kelola Klaim Missing Miles</h1>
+        <p class="text-muted text-sm">Proses dan verifikasi klaim dari member</p>
+    </div>
+
+    <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+    <form method="get" style="display:flex; gap:1rem; flex-wrap:wrap; align-items: flex-end;">
+        <div class="filter-group">
+            <a href="?status=" class="filter-btn {% if not status_filter %}active{% endif %}">Semua</a>
+            <a href="?status=Menunggu" class="filter-btn {% if status_filter == 'Menunggu' %}active{% endif %}">Menunggu</a>
+            <a href="?status=Disetujui" class="filter-btn {% if status_filter == 'Disetujui' %}active{% endif %}">Disetujui</a>
+            <a href="?status=Ditolak" class="filter-btn {% if status_filter == 'Ditolak' %}active{% endif %}">Ditolak</a>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.3rem;">
+            <label class="text-xs text-muted" style="font-weight:600;">Maskapai</label>
+            <select name="maskapai" class="form-control" style="width:auto; min-width:180px;">
+                <option value="">Semua Maskapai</option>
+                {% for m in maskapai_list %}
+                <option value="{{ m.0 }}" {% if maskapai_filter == m.0 %}selected{% endif %}>
+                    {{ m.0 }} – {{ m.1 }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.3rem;">
+            <label class="text-xs text-muted" style="font-weight:600;">Dari Tanggal</label>
+            <input type="date" name="tanggal_dari" class="form-control" value="{{ tanggal_dari }}">
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.3rem;">
+            <label class="text-xs text-muted" style="font-weight:600;">Sampai Tanggal</label>
+            <input type="date" name="tanggal_sampai" class="form-control" value="{{ tanggal_sampai }}">
+        </div>
+
+        <div style="display:flex; gap:0.5rem;">
+            <button type="submit" class="btn-primary" style="padding: 0.6rem 1.2rem;">Filter</button>
+            <a href="{% url 'miles:claim_staff_list' %}" class="btn-secondary" style="padding: 0.6rem 1.2rem; text-decoration:none; display:inline-block; text-align:center;">Reset</a>
+        </div>
+    </form>
+</div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
+            <thead>
+            <tr style="background:var(--bg-tint);border-bottom:1.5px solid var(--border);">
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">No. Klaim</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Member</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Maskapai</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Rute</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Tanggal</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Flight</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Kelas</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Pengajuan</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Status</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Aksi</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for c in claims %}
+                <tr style="...">
+                    <td style="...">CLM-{{ c.id|stringformat:'03d' }}</td>
+                    
+
+                    <td style="...">
+                        <div style="font-weight:500;">{{ c.nama_member }}</div>
+                        <div style="font-size:.78rem;color:var(--text-secondary);">{{ c.email_member }}</div>
+                    </td>
+                    
+                    <td style="...">{{ c.maskapai }}</td>
+                    <td style="...">{{ c.rute }}</td>
+                    
+
+                    <td style="...">{{ c.tanggal_penerbangan }}</td>
+                    
+
+                    <td style="...">{{ c.flight_number|default:"-" }}</td>
+                    
+
+                    <td style="...">{{ c.kelas_kabin|default:"-" }}</td>
+                    
+
+                    <td style="padding:.7rem 1rem; color:var(--text-secondary);">
+                        {{ c.timestamp|date:"d M Y" }}<br>
+                        <small>{{ c.timestamp|date:"H:i" }} WIB</small>
+                    </td>
+                    
+                    <td style="...">
+                        {% if c.status_penerimaan == 'Disetujui' %}
+                            <span style="...">Disetujui</span>
+                        {% elif c.status_penerimaan == 'Menunggu' %}
+                            <span style="...">Menunggu</span>
+                        {% else %}
+                            <span style="...">Ditolak</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td style="...">
+                        {% if c.status_penerimaan == 'Menunggu' %}
+                        <div style="display:flex;gap:.4rem;">
+                            <button onclick="openApproveModal('{{ c.id }}', 'CLM-{{ c.id|stringformat:"03d" }}', '{{ c.nama_member }}', '{{ c.rute }}', '{{ c.kelas_kabin|default:"-" }}')">✓</button>
+                            <button onclick="openRejectModal('{{ c.id }}', 'CLM-{{ c.id|stringformat:"03d" }}', '{{ c.nama_member }}', '{{ c.rute }}', '{{ c.kelas_kabin|default:"-" }}')">✗</button>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                ...
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    </div>
+
+    <div id="approveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+        <h2 style="font-size:1.1rem;margin-bottom:.5rem;">Setujui Klaim</h2>
+        <p class="text-muted text-sm" style="margin-bottom:1rem;">Miles akan ditambahkan ke akun member sesuai rute dan kelas kabin.</p>
+        <div style="background:var(--bg-tint);padding:1rem;border-radius:var(--radius-md);margin-bottom:1.25rem;font-size:.875rem;">
+        <div><strong>Klaim:</strong> <span id="apv_id"></span></div>
+        <div style="margin-top:.35rem;"><strong>Member:</strong> <span id="apv_member"></span></div>
+        <div style="margin-top:.35rem;"><strong>Rute:</strong> <span id="apv_rute"></span></div>
+        <div style="margin-top:.35rem;"><strong>Kelas:</strong> <span id="apv_kelas"></span></div>
+        </div>
+        <form method="post" id="approveForm" action="">
+        {% csrf_token %}
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;">
+            <button type="button" class="btn-secondary" onclick="closeModal('approveModal')">Batal</button>
+            <button type="submit" class="btn-primary">Setujui</button>
+        </div>
+        </form>
+    </div>
+    </div>
+
+    <div id="rejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+        <h2 style="font-size:1.1rem;margin-bottom:.5rem;">Tolak Klaim</h2>
+        <p class="text-muted text-sm" style="margin-bottom:1rem;">Klaim akan ditolak dan member akan diinformasikan.</p>
+        <div style="background:var(--bg-tint);padding:1rem;border-radius:var(--radius-md);margin-bottom:1.25rem;font-size:.875rem;">
+        <div><strong>Klaim:</strong> <span id="rej_id"></span></div>
+        <div style="margin-top:.35rem;"><strong>Member:</strong> <span id="rej_member"></span></div>
+        <div style="margin-top:.35rem;"><strong>Rute:</strong> <span id="rej_rute"></span></div>
+        <div style="margin-top:.35rem;"><strong>Kelas:</strong> <span id="rej_kelas"></span></div>
+        </div>
+        <form method="post" id="rejectForm" action="">
+        {% csrf_token %}
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;">
+            <button type="button" class="btn-secondary" onclick="closeModal('rejectModal')">Batal</button>
+            <button type="submit" style="padding:.65rem 1.5rem;background:#DC2626;color:#fff;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:600;">Tolak</button>
+        </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function closeModal(id) { document.getElementById(id).style.display='none'; }
+    
+    function openApproveModal(id, clmId, member, rute, kelas) {
+        document.getElementById('apv_id').textContent = clmId;
+        document.getElementById('apv_member').textContent = member;
+        document.getElementById('apv_rute').textContent = rute;
+        document.getElementById('apv_kelas').textContent = kelas;
+        document.getElementById('approveForm').action = '/miles/staff/claim/' + id + '/approve/';
+        document.getElementById('approveModal').style.display = 'flex';
+    }
+    
+    function openRejectModal(id, clmId, member, rute, kelas) {
+        document.getElementById('rej_id').textContent = clmId;
+        document.getElementById('rej_member').textContent = member;
+        document.getElementById('rej_rute').textContent = rute;
+        document.getElementById('rej_kelas').textContent = kelas;
+        document.getElementById('rejectForm').action = '/miles/staff/claim/' + id + '/reject/';
+        document.getElementById('rejectModal').style.display = 'flex';
+    }
+</script>
+{% endblock %}
