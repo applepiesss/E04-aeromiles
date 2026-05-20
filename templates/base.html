@@ -263,26 +263,27 @@
             {% if not request.session.role %}
                 <li><a href="{% url 'main:login' %}">Login</a></li>
                 <li><a href="{% url 'main:register' %}" class="btn-primary">Register</a></li>
-
+        
             {% elif request.session.role == 'member' %}
                 <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
+                <li><a href="#">Identitas Saya</a></li>
+                <li><a href="{% url 'miles:claim_member_list' %}" {% if request.path == '/miles/claim/' %}class="active"{% endif %}>Klaim Miles</a></li>
+                <li><a href="{% url 'miles:transfer_list' %}" {% if request.path == '/miles/transfer/' %}class="active"{% endif %}>Transfer Miles</a></li>
                 <li><a href="{% url 'members:identitas' %}" {% if request.path == '/members/identitas/' %}class="active"{% endif %}>Identitas Saya</a></li>
-                <li><a href="{% url 'miles:claim_member_list' %}" {% if '/miles/claim/' in request.path %}class="active"{% endif %}>Klaim Miles</a></li>
-                <li><a href="{% url 'miles:transfer_list' %}" {% if '/miles/transfer/' in request.path %}class="active"{% endif %}>Transfer Miles</a></li>
-                <li><a href="#">Redeem Hadiah</a></li>
-                <li><a href="#">Beli Package</a></li>
-                <li><a href="{% url 'members:tier_info' %}" {% if request.path == '/members/tier-info/' %}class="active"{% endif %}>Info Tier</a></li>
-                <li><a href="#">Profil</a></li>
+                <li><a href="{% url 'rewards:redeem_hadiah' %}">Redeem Hadiah</a></li>
+                <li><a href="{% url 'miles:buy_miles_package' %}">Beli Package</a></li>
+                <li><a href="{% url 'members:tier_info' %}">Info Tier</a></li>
+                <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
-
+        
             {% elif request.session.role == 'staff' %}
                 <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
+                <li><a href="{% url 'miles:claim_staff_list' %}" {% if request.path == '/miles/staff/claim/' in request.path %}class="active"{% endif %}>Kelola Klaim</a></li>
                 <li><a href="{% url 'members:kelola_member' %}" {% if request.path == '/members/kelola/' %}class="active"{% endif %}>Kelola Member</a></li>
-                <li><a href="{% url 'miles:claim_staff_list' %}" {% if '/miles/staff/claim/' in request.path %}class="active"{% endif %}>Kelola Klaim</a></li>
-                <li><a href="{% url 'vendors:katalog_hadiah' %}">Kelola Hadiah</a></li>
-                <li><a href="{% url 'vendors:manajemen_mitra' %}">Kelola Mitra</a></li>
-                <li><a href="#">Laporan Transaksi</a></li>
-                <li><a href="#">Profil</a></li>
+                <li><a href="http://127.0.0.1:8000/vendors/katalog_hadiah/">Kelola Hadiah</a></li>
+                <li><a href="http://127.0.0.1:8000/vendors/manajemen-mitra/">Kelola Mitra</a></li>
+                <li><a href="{% url 'staf:laporan_transaksi' %}">Laporan Transaksi</a></li>
+                <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
             {% endif %}
         </ul>
