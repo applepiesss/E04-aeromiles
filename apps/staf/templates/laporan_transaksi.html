@@ -696,7 +696,6 @@
     <div class="view-toggle">
         <button class="toggle-btn {% if view_type == 'transactions' or not view_type %}active{% endif %}" onclick="switchView('transactions')">Semua Transaksi</button>
         <button class="toggle-btn {% if view_type == 'top_members' %}active{% endif %}" onclick="switchView('top_members')">Member Terbaik</button>
-        <button class="toggle-btn {% if view_type == 'active_members' %}active{% endif %}" onclick="switchView('active_members')">Member Aktif</button>
     </div>
 
     <!-- All Transactions View -->
@@ -744,7 +743,7 @@
                                     <td>
                                         <div class="action-buttons">
                                             {% if trans.deletable %}
-                                                <button class="btn-delete" onclick="openDeleteModal('{{ trans.id }}', '{{ trans.type }}')">Hapus</button>
+                                                <button class="btn-delete delete-btn" data-transaction-id="{{ trans.id }}" data-transaction-type="{{ trans.type }}" data-transaction-date="{{ trans.waktu }}">Hapus</button>
                                             {% else %}
                                                 <button class="btn-delete disabled" title="Tidak dapat dihapus">Hapus</button>
                                             {% endif %}
@@ -792,27 +791,7 @@
     {% endif %}
 
     <!-- Active Members View -->
-    {% if view_type == 'active_members' %}
-        <div class="table-section">
-            <h3>Member Paling Aktif (Transfer & Redeem)</h3>
-            {% if active_members %}
-                <div class="top-members-grid">
-                    {% for member, count in active_members %}
-                        <div class="member-card">
-                            <div class="member-rank">{{ forloop.counter }}</div>
-                            <div class="member-name">{{ member }}</div>
-                            <div class="member-stat">Total Aktivitas</div>
-                            <div class="member-miles" style="color: var(--orange-primary);">{{ count }} transaksi</div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <div class="empty-state-title">Tidak Ada Data</div>
-                </div>
-            {% endif %}
-        </div>
-    {% endif %}
+
 </div>
 
 <!-- Delete Confirmation Modal -->
@@ -824,7 +803,7 @@
         </div>
         <div class="modal-body">
             <p style="margin-bottom: 10px;"><strong>Peringatan:</strong> Penghapusan riwayat transaksi bersifat permanen dan tidak dapat diundur.</p>
-            <p style="margin-bottom: 10px;">Riwayat transaksi ID: <strong id="transactionIdDisplay"></strong></p>
+            <p style="margin-bottom: 10px;">Tanggal transaksi: <strong id="transactionDateDisplay"></strong> | Tipe: <strong id="transactionTypeDisplay"></strong></p>
             <p>Penghapusan ini juga akan memengaruhi tampilan yang dapat dilihat oleh member. Apakah Anda yakin ingin melanjutkan?</p>
         </div>
         <div class="modal-footer">
@@ -845,9 +824,10 @@
         window.location.href = url.toString();
     }
 
-    function openDeleteModal(transactionId, transactionType) {
+    function openDeleteModal(transactionId, transactionType, transactionDate) {
         document.getElementById('transactionId').value = transactionId;
-        document.getElementById('transactionIdDisplay').textContent = transactionId + ' (' + transactionType + ')';
+        document.getElementById('transactionDateDisplay').textContent = transactionDate;
+        document.getElementById('transactionTypeDisplay').textContent = transactionType;
         document.getElementById('deleteModal').classList.add('show');
     }
 
@@ -862,6 +842,16 @@
 
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') closeDeleteModal();
+    });
+
+    // Delete button event delegation (works with pagination)
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('delete-btn')) {
+            const transactionId = e.target.getAttribute('data-transaction-id');
+            const transactionType = e.target.getAttribute('data-transaction-type');
+            const transactionDate = e.target.getAttribute('data-transaction-date');
+            openDeleteModal(transactionId, transactionType, transactionDate);
+        }
     });
 
     /* ── Client-side Pagination ── */
