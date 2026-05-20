@@ -7,6 +7,9 @@ CREATE SCHEMA AEROMILES;
 SET search_path to AEROMILES;
 
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+
 CREATE TABLE PENGGUNA (
     email           VARCHAR(100)   PRIMARY KEY,
     password        VARCHAR(255)    NOT NULL,
@@ -49,7 +52,7 @@ DECLARE
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM PENGGUNA 
-        WHERE lower(email) = lower(p_email) AND password = p_password
+        WHERE lower(email) = lower(p_email) AND password = crypt(p_password, password)
     ) THEN
         result := 'Email atau password salah, silakan coba lagi.';
     ELSE
@@ -98,74 +101,74 @@ $$ LANGUAGE plpgsql;
 
 
 INSERT INTO PENGGUNA (email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan) VALUES 
-('strawberry.shortcake@gmail.com',    '$2b$12$KxQmN3vLpR4sT6uW8yZaAeBfCgDhEiGjHkIlJmKnLoMpNqOrPsQuRv', 'Ms.', 'Strawberry',       'Shortcake',  '+1',   '5551901615', '1990-06-15', 'American'),
-('blueberry.muffin@gmail.com',        '$2b$12$LyRnO4wMqS5tU7vX9zAbBfCgDhEiGjHkIlJmKnLoMpNqOrPsQuRvSw', 'Ms.', 'Blueberry',         'Muffin',     '+1',   '5551912320', '1991-03-20', 'American'),
-('orange.blossom@gmail.com',          '$2b$12$MzSoP5xNrT6uV8wY0aAcBdCeEfFgGhHiIjJkKlLmMnNoOpPqQrRsSt', 'Ms.', 'Orange',             'Blossom',    '+1',   '5551891005', '1989-10-05', 'American'),
-('lemon.merringue@gmail.com',         '$2b$12$NaToQ6yOsU7vW9xZ1bBdCeCfDgEhFiGjHkIlJmKnLoMpNqOrPsQuRv', 'Ms.', 'Lemon',              'Merringue',  '+1',   '5551920722', '1992-07-22', 'American'),
-('plum.pudding@gmail.com',            '$2b$12$ObUpR7zPtV8wX0yA2cCeBfDgEhFiGjHkIlJmKnLoMpNqOrPsQuRvSw', 'Mr.', 'Plum',               'Pudding',    '+1',   '5551881201', '1988-12-01', 'American'),
-('cherry.jam@gmail.com',              '$2b$12$PcVqS8aQuW9xY1zA3dDfBgChDiEjFkGlHmInJoKpLqMrNsOtPuQvRw', 'Ms.', 'Cherry',             'Jam',        '+1',   '5551930430', '1993-04-30', 'American'),
-('raspberry.torte@gmail.com',         '$2b$12$QdWrT9bRvX0yZ2aB4eEgChDiEjFkGlHmInJoKpLqMrNsOtPuQvRwSx', 'Ms.', 'Raspberry',          'Torte',      '+1',   '5551900914', '1990-09-14', 'American'),
+('strawberry.shortcake@gmail.com',      crypt('strawberry123', gen_salt('bf')), 'Ms.', 'Strawberry',       'Shortcake',  '+1',   '5551901615', '1990-06-15', 'American'),
+('blueberry.muffin@gmail.com',          crypt('blueberry123', gen_salt('bf')), 'Ms.', 'Blueberry',         'Muffin',     '+1',   '5551912320', '1991-03-20', 'American'),
+('orange.blossom@gmail.com',            crypt('orange123', gen_salt('bf')), 'Ms.', 'Orange',             'Blossom',    '+1',   '5551891005', '1989-10-05', 'American'),
+('lemon.merringue@gmail.com',           crypt('lemon123', gen_salt('bf')), 'Ms.', 'Lemon',              'Merringue',  '+1',   '5551920722', '1992-07-22', 'American'),
+('plum.pudding@gmail.com',              crypt('plum123', gen_salt('bf')), 'Mr.', 'Plum',               'Pudding',    '+1',   '5551881201', '1988-12-01', 'American'),
+('cherry.jam@gmail.com',                crypt('cherry123', gen_salt('bf')), 'Ms.', 'Cherry',             'Jam',        '+1',   '5551930430', '1993-04-30', 'American'),
+('raspberry.torte@gmail.com',           crypt('raspberry123', gen_salt('bf')), 'Ms.', 'Raspberry',          'Torte',      '+1',   '5551900914', '1990-09-14', 'American'),
 
-('judy.hopps@yahoo.com',            '$2b$12$ReXsU0cSwY1zA3bC5fFhDiEjFkGlHmInJoKpLqMrNsOtPuQvRwSxTy', 'Ms.', 'Judy',               'Hopps',      '+1',   '5554941103', '1994-11-03', 'American'),
-('nick.wilde@yahoo.com',            '$2b$12$SfYtV1dTxZ2aB4cD6gGiEjFkGlHmInJoKpLqMrNsOtPuQvRwSxTyUz', 'Mr.', 'Nick',               'Wilde',      '+1',   '5558560622', '1985-06-22', 'American'),
-('fru.fru@yahoo.com',             '$2b$12$TgZuW2eUyA3bC5dE7hHjFkGlHmInJoKpLqMrNsOtPuQvRwSxTyUzVa', 'Ms.', 'Fru',                'Fru',        '+1',   '5559960214', '1996-02-14', 'American'),
-('pawbert.linxley@yahoo.com',          '$2b$12$UhAvX3fVzB4cD6eF8iIkGlHmInJoKpLqMrNsOtPuQvRwSxTyUzVaBb', 'Mr.', 'Pawbert',            'Linxley',    '+1',   '5558050519', '1980-05-19', 'American'),
+('judy.hopps@yahoo.com',                crypt('judy123', gen_salt('bf')), 'Ms.', 'Judy',               'Hopps',      '+1',   '5554941103', '1994-11-03', 'American'),
+('nick.wilde@yahoo.com',                crypt('nick123', gen_salt('bf')), 'Mr.', 'Nick',               'Wilde',      '+1',   '5558560622', '1985-06-22', 'American'),
+('fru.fru@yahoo.com',                   crypt('fru123', gen_salt('bf')), 'Ms.', 'Fru',                'Fru',        '+1',   '5559960214', '1996-02-14', 'American'),
+('pawbert.linxley@yahoo.com',           crypt('pawbert123', gen_salt('bf')), 'Mr.', 'Pawbert',            'Linxley',    '+1',   '5558050519', '1980-05-19', 'American'),
 
-('choso.kamo@gmail.com',           '$2b$12$ViByY4gWaC5dE7fG9jJlHmInJoKpLqMrNsOtPuQvRwSxTyUzVaBbCc', 'Mr.', 'Choso',              'Kamo',       '+81',  '8031234001', '1981-01-07', 'Japanese'),
-('hiromi.hiruguma@gmail.com',      '$2b$12$WjCzZ5hXbD6eF8gH0kKmInJoKpLqMrNsOtPuQvRwSxTyUzVaBbCcDd', 'Mr.', 'Hiromi',             'Hiruguma',   '+81',  '8031234002', '1999-08-15', 'Japanese'),
-('yuji.itadori@gmail.com',         '$2b$12$XkDaA6iYcE7fG9hI1lLnJoKpLqMrNsOtPuQvRwSxTyUzVaBbCcDdEe', 'Mr.', 'Yuji',               'Itadori',    '+81',  '8031234003', '2000-03-20', 'Japanese'),
-('megumi.fushiguro@gmail.com',     '$2b$12$YlEbB7jZdF8gH0iJ2mMoKpLqMrNsOtPuQvRwSxTyUzVaBbCcDdEeFf', 'Mr.', 'Megumi',             'Fushiguro',  '+81',  '8031234004', '2000-12-22', 'Japanese'),
-('nobara.kugisaki@gmail.com',      '$2b$12$ZmFcC8kaEG9hI1jK3nNoLqMrNsOtPuQvRwSxTyUzVaBbCcDdEeFfGg', 'Ms.', 'Nobara',             'Kugisaki',   '+81',  '8031234005', '2001-08-07', 'Japanese'),
-('satoru.gojo@gmail.com',          '$2b$12$AnGdD9lbFH0iJ2kL4ooOpMrNsOtPuQvRwSxTyUzVaBbCcDdEeFfGgHh', 'Mr.', 'Satoru',             'Gojo',       '+81',  '8031234006', '1989-12-07', 'Japanese'),
-('suguru.geto@gmail.com',          '$2b$12$BoHeE0mcGI1jK3lM5ppPqNsOtPuQvRwSxTyUzVaBbCcDdEeFfGgHhIi', 'Mr.', 'Suguru',             'Geto',       '+81',  '8031234007', '1989-02-03', 'Japanese'),
-('toji.fushiguro@gmail.com',       '$2b$12$CpIfF1ndHJ2kL4mN6qqRrOtPuQvRwSxTyUzVaBbCcDdEeFfGgHhIiJj', 'Mr.', 'Toji',               'Fushiguro',  '+81',  '8031234008', '1971-03-01', 'Japanese'),
-('kento.nanami@gmail.com',         '$2b$12$DqJgG2oeIK3lM5nO7rrSsOuPvRwSxTyUzVaBbCcDdEeFfGgHhIiJjKk', 'Mr.', 'Kento',              'Nanami',     '+81',  '8031234009', '1985-06-28', 'Japanese'),
-('shoko.ieiri@gmail.com',          '$2b$12$ErKhH3pfJL4mN6oP8ssTtPuQvRwSxTyUzVaBbCcDdEeFfGgHhIiJjKkLl', 'Dr.', 'Shoko',            'Ieiri',      '+81',  '8031234010', '1989-09-05', 'Japanese'),
-('yuki.tsukumo@gmail.com',         '$2b$12$FsLiI4qgKM5nO7pQ9ttUuQvRwSxTyUzVaBbCcDdEeFfGgHhIiJjKkLlMm', 'Ms.', 'Yuki',            'Tsukumo',    '+81',  '8031234011', '1984-12-31', 'Japanese'),
-('yuta.okkotsu@gmail.com',         '$2b$12$GtMjJ5rhLN6oP8qR0uuVvRwSxTyUzVaBbCcDdEeFfGgHhIiJjKkLlMmNn', 'Mr.', 'Yuta',            'Okkotsu',    '+81',  '8031234012', '2000-03-07', 'Japanese'),
-('maki.zenin@gmail.com',           '$2b$12$HuNkK6siMO7pQ9rS1vvWwSxTyUzVaBbCcDdEeFfGgHhIiJjKkLlMmNnOo', 'Ms.', 'Maki',             'Zenin',      '+81',  '8031234013', '2001-01-20', 'Japanese'),
+('choso.kamo@gmail.com',                crypt('choso123', gen_salt('bf')), 'Mr.', 'Choso',              'Kamo',       '+81',  '8031234001', '1981-01-07', 'Japanese'),
+('hiromi.hiruguma@gmail.com',           crypt('hiromi123', gen_salt('bf')), 'Mr.', 'Hiromi',             'Hiruguma',   '+81',  '8031234002', '1999-08-15', 'Japanese'),
+('yuji.itadori@gmail.com',              crypt('yuji123', gen_salt('bf')), 'Mr.', 'Yuji',               'Itadori',    '+81',  '8031234003', '2000-03-20', 'Japanese'),
+('megumi.fushiguro@gmail.com',          crypt('megumi123', gen_salt('bf')), 'Mr.', 'Megumi',             'Fushiguro',  '+81',  '8031234004', '2000-12-22', 'Japanese'),
+('nobara.kugisaki@gmail.com',           crypt('nobara123', gen_salt('bf')), 'Ms.', 'Nobara',             'Kugisaki',   '+81',  '8031234005', '2001-08-07', 'Japanese'),
+('satoru.gojo@gmail.com',               crypt('satoru123', gen_salt('bf')), 'Mr.', 'Satoru',             'Gojo',       '+81',  '8031234006', '1989-12-07', 'Japanese'),
+('suguru.geto@gmail.com',               crypt('suguru123', gen_salt('bf')), 'Mr.', 'Suguru',             'Geto',       '+81',  '8031234007', '1989-02-03', 'Japanese'),
+('toji.fushiguro@gmail.com',            crypt('toji123', gen_salt('bf')), 'Mr.', 'Toji',               'Fushiguro',  '+81',  '8031234008', '1971-03-01', 'Japanese'),
+('kento.nanami@gmail.com',              crypt('kento123', gen_salt('bf')), 'Mr.', 'Kento',              'Nanami',     '+81',  '8031234009', '1985-06-28', 'Japanese'),
+('shoko.ieiri@gmail.com',               crypt('shoko123', gen_salt('bf')), 'Dr.', 'Shoko',              'Ieiri',      '+81',  '8031234010', '1989-09-05', 'Japanese'),
+('yuki.tsukumo@gmail.com',              crypt('yuki123', gen_salt('bf')), 'Ms.', 'Yuki',               'Tsukumo',    '+81',  '8031234011', '1984-12-31', 'Japanese'),
+('yuta.okkotsu@gmail.com',              crypt('yuta123', gen_salt('bf')), 'Mr.', 'Yuta',               'Okkotsu',    '+81',  '8031234012', '2000-03-07', 'Japanese'),
+('maki.zenin@gmail.com',                crypt('maki123', gen_salt('bf')), 'Ms.', 'Maki',               'Zenin',      '+81',  '8031234013', '2001-01-20', 'Japanese'),
 
-('twilight.sparkle@yahoo.com',        '$2b$12$IvOlL7tjNP8qR0sT2wwXxTyUzVaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPp', 'Ms.', 'Twilight',          'Sparkle',    '+1',   '5551951022', '1995-10-22', 'American'),
-('pinkie.pie@yahoo.com',              '$2b$12$JwPmM8ukOQ9rS1tU3xxYyUzVaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQq', 'Ms.', 'Pinkie',             'Pie',        '+1',   '5551960503', '1996-05-03', 'American'),
-('rainbow.dash@yahoo.com',            '$2b$12$KxQnN9vlPR0sT2uV4yyZzVaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRr', 'Ms.', 'Rainbow',            'Dash',       '+1',   '5551950401', '1995-04-01', 'American'),
+('twilight.sparkle@yahoo.com',          crypt('twilight123', gen_salt('bf')), 'Ms.', 'Twilight',           'Sparkle',    '+1',   '5551951022', '1995-10-22', 'American'),
+('pinkie.pie@yahoo.com',                crypt('pinkie123', gen_salt('bf')), 'Ms.', 'Pinkie',             'Pie',        '+1',   '5551960503', '1996-05-03', 'American'),
+('rainbow.dash@yahoo.com',              crypt('rainbow123', gen_salt('bf')), 'Ms.', 'Rainbow',            'Dash',       '+1',   '5551950401', '1995-04-01', 'American'),
 
-('tony.stark@gmail.com',                 '$2b$12$LyRoO0wmQS1tU3vW5zzAaWbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSs', 'Mr.', 'Tony',              'Stark',      '+1',   '5557000529', '1970-05-29', 'American'),
-('steve.rogers@gmail.com',               '$2b$12$MzSpP1xnRT2uV4wX6aaAbXcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTt', 'Mr.', 'Steve',              'Rogers',     '+1',   '5551180704', '1918-07-04', 'American'),
-('bruce.banner@gmail.com',               '$2b$12$NaToQ2yoSU3vW5xY7bbBcYdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUu', 'Dr.', 'Bruce',              'Banner',     '+1',   '5556911218', '1969-12-18', 'American'),
-('natasha.romanoff@gmail.com',           '$2b$12$ObUpR3zpTV4wX6yZ8ccCdZeEfFgGhHiIjJkKlLmMnNoOpPqQrRsSuTtUuVv', 'Ms.', 'Natasha',           'Romanoff',   '+7',   '9161234567', '1984-11-22', 'Russian'),
-('peter.parker@gmail.com',               '$2b$12$PcVqS4aqUW5xY7zA9ddDeAfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVw', 'Mr.', 'Peter',              'Parker',     '+1',   '5552010810', '2001-08-10', 'American'),
-('wanda.maximoff@gmail.com',             '$2b$12$QdWrT5brVX6yZ8aB0eeEfBgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWx', 'Ms.', 'Wanda',              'Maximoff',   '+421', '9001234567', '1989-02-10', 'Sokovian'),
-('scott.lang@gmail.com',                 '$2b$12$ReXsU6csWY7zA9bC1ffFgChHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXx', 'Mr.', 'Scott',              'Lang',       '+1',   '5557240415', '1972-04-15', 'American'),
+('tony.stark@gmail.com',                crypt('tony123', gen_salt('bf')), 'Mr.', 'Tony',               'Stark',      '+1',   '5557000529', '1970-05-29', 'American'),
+('steve.rogers@gmail.com',              crypt('steve123', gen_salt('bf')), 'Mr.', 'Steve',              'Rogers',     '+1',   '5551180704', '1918-07-04', 'American'),
+('bruce.banner@gmail.com',              crypt('bruce123', gen_salt('bf')), 'Dr.', 'Bruce',              'Banner',     '+1',   '5556911218', '1969-12-18', 'American'),
+('natasha.romanoff@gmail.com',          crypt('natasha123', gen_salt('bf')), 'Ms.', 'Natasha',           'Romanoff',   '+7',   '9161234567', '1984-11-22', 'Russian'),
+('peter.parker@gmail.com',              crypt('peter123', gen_salt('bf')), 'Mr.', 'Peter',              'Parker',     '+1',   '5552010810', '2001-08-10', 'American'),
+('wanda.maximoff@gmail.com',            crypt('wanda123', gen_salt('bf')), 'Ms.', 'Wanda',              'Maximoff',   '+421', '9001234567', '1989-02-10', 'Sokovian'),
+('scott.lang@gmail.com',                crypt('scott123', gen_salt('bf')), 'Mr.', 'Scott',              'Lang',       '+1',   '5557240415', '1972-04-15', 'American'),
 
-('will.byers@gmail.com',        '$2b$12$SfYtV7dtXZ8aB0cD2ggGhDiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYy', 'Mr.', 'Will',               'Byers',      '+1',   '5557110322', '1971-03-22', 'American'),
-('jonathan.byers@gmail.com',    '$2b$12$TgZuW8euYA9bC1dE3hhHiEjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZz', 'Mr.', 'Jonathan',           'Byers',      '+1',   '5556671201', '1967-12-01', 'American'),
-('mike.wheeler@gmail.com',      '$2b$12$UhAvX9fvZB0cD2eF4iiIjFkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZaAa', 'Mr.', 'Mike',               'Wheeler',    '+1',   '5557110407', '1971-04-07', 'American'),
-('nancy.wheeler@gmail.com',     '$2b$12$ViByY0gwAC1dE3fG5jjJkGlLmMnNoOpPqQrRsStTuUvVwWxXyYzZaAbBb', 'Ms.', 'Nancy',              'Wheeler',    '+1',   '5556671114', '1967-11-14', 'American'),
-('holly.wheeler@gmail.com',     '$2b$12$WjCzZ1hxBD2eF4gH6kkKlHmMnNoOpPqQrRsStTuUvVwWxXyYzZaAbBcCc', 'Ms.', 'Holly',              'Wheeler',    '+1',   '5558220719', '1982-07-19', 'American'),
-('lucas.sinclair@gmail.com',    '$2b$12$XkDaA2iyC3fG5hI7llLmInNoOpPqQrRsStTuUvVwWxXyYzZaAbBcCdDd', 'Mr.', 'Lucas',              'Sinclair',   '+1',   '5557110601', '1971-06-01', 'American'),
-('erica.sinclair@gmail.com',    '$2b$12$YlEbB3jzDEGH6iJ8mmMnJoOpPqQrRsStTuUvVwWxXyYzZaAbBcCdDeEe', 'Ms.', 'Erica',              'Sinclair',   '+1',   '5557750702', '1975-07-02', 'American'),
-('dustin.henderson@gmail.com',  '$2b$12$ZmFcC4kaEF7gH9jK0nnNoKpPqQrRsStTuUvVwWxXyYzZaAbBcCdDeEfFf', 'Mr.', 'Dustin',             'Henderson',  '+1',   '5557110110', '1971-01-10', 'American'),
-('steve.harrington@gmail.com',  '$2b$12$AnGdD5lbFG8hI0kL1ooOpLqRsStTuUvVwWxXyYzZaAbBcCdDeEfFgGg', 'Mr.', 'Steve',               'Harrington', '+1',   '5556660922', '1966-09-22', 'American'),
-('max.mayfield@gmail.com',      '$2b$12$BoHeE6mcGH9iJ1lM2ppPqMrSsStTuUvVwWxXyYzZaAbBcCdDeEfFgGhHh', 'Ms.', 'Max',                'Mayfield',   '+1',   '5557110906', '1971-09-06', 'American'),
-('jane.hopper@gmail.com',       '$2b$12$CpIfF7ndHI0jK2mN3qqQrNsTtUuVwWxXyYzZaAbBcCdDeEfFgGhHiIi', 'Ms.', 'Jane',                'Hopper',     '+1',   '5557111028', '1971-10-28', 'American'),
+('will.byers@gmail.com',                crypt('will123', gen_salt('bf')), 'Mr.', 'Will',               'Byers',      '+1',   '5557110322', '1971-03-22', 'American'),
+('jonathan.byers@gmail.com',            crypt('jonathan123', gen_salt('bf')), 'Mr.', 'Jonathan',           'Byers',      '+1',   '5556671201', '1967-12-01', 'American'),
+('mike.wheeler@gmail.com',              crypt('mike123', gen_salt('bf')), 'Mr.', 'Mike',               'Wheeler',    '+1',   '5557110407', '1971-04-07', 'American'),
+('nancy.wheeler@gmail.com',             crypt('nancy123', gen_salt('bf')), 'Ms.', 'Nancy',              'Wheeler',    '+1',   '5556671114', '1967-11-14', 'American'),
+('holly.wheeler@gmail.com',             crypt('holly123', gen_salt('bf')), 'Ms.', 'Holly',              'Wheeler',    '+1',   '5558220719', '1982-07-19', 'American'),
+('lucas.sinclair@gmail.com',            crypt('lucas123', gen_salt('bf')), 'Mr.', 'Lucas',              'Sinclair',   '+1',   '5557110601', '1971-06-01', 'American'),
+('erica.sinclair@gmail.com',            crypt('erica123', gen_salt('bf')), 'Ms.', 'Erica',              'Sinclair',   '+1',   '5557750702', '1975-07-02', 'American'),
+('dustin.henderson@gmail.com',          crypt('dustin123', gen_salt('bf')), 'Mr.', 'Dustin',             'Henderson',  '+1',   '5557110110', '1971-01-10', 'American'),
+('steve.harrington@gmail.com',          crypt('steve123', gen_salt('bf')), 'Mr.', 'Steve',               'Harrington', '+1',   '5556660922', '1966-09-22', 'American'),
+('max.mayfield@gmail.com',              crypt('max123', gen_salt('bf')), 'Ms.', 'Max',                'Mayfield',   '+1',   '5557110906', '1971-09-06', 'American'),
+('jane.hopper@gmail.com',               crypt('jane123', gen_salt('bf')), 'Ms.', 'Jane',                'Hopper',     '+1',   '5557111028', '1971-10-28', 'American'),
 
-('larajean.songcovey@ui.ac.id',       '$2b$12$DqJgG8oeIJ1kL3nO4rrRoOtUuVwWxXyYzZaAbBcCdDeEfFgGhHiIjJj', 'Ms.', 'Lara Jean Song',    'Covey',      '+1',   '5551990420', '1999-04-20', 'American'),
-('margot.songcovey@ui.ac.id',         '$2b$12$ErKhH9pfJK2lM4oP5ssSsPuVvWxXyYzZaAbBcCdDeEfFgGhHiIjJkKk', 'Ms.', 'Margot Song',       'Covey',      '+1',  '7911234567', '1997-08-12', 'American'),
-('kitty.songcovey@ui.ac.id',          '$2b$12$FsLiI0qgKL3mN5pQ6ttTtQvWwXyYzZaAbBcCdDeEfFgGhHiIjJkKlLl', 'Ms.', 'Kitty Song',        'Covey',      '+1',   '5552030630', '2003-06-30', 'American'),
-('peter.kavinsky@ui.ac.id',           '$2b$12$GtMjJ1rhLM4nO6qR7uuUuRwXxYzZaAbBcCdDeEfFgGhHiIjJkKlLmMm', 'Mr.', 'Peter',              'Kavinsky',   '+1',   '5551990622', '1999-06-22', 'American'),
-('josh.sanderson@ui.ac.id',           '$2b$12$HuNkK2siMN5oP7rS8vvVvSxYyZaAbBcCdDeEfFgGhHiIjJkKlLmMnNn', 'Mr.', 'Josh',               'Sanderson',  '+1',   '5559940315', '1994-03-15', 'American'),
+('larajean.songcovey@ui.ac.id',         crypt('larajeansong123', gen_salt('bf')), 'Ms.', 'Lara Jean Song',    'Covey',      '+1',   '5551990420', '1999-04-20', 'American'),
+('margot.songcovey@ui.ac.id',           crypt('margotsong123', gen_salt('bf')), 'Ms.', 'Margot Song',       'Covey',      '+1',  '7911234567', '1997-08-12', 'American'),
+('kitty.songcovey@ui.ac.id',            crypt('kittysong123', gen_salt('bf')), 'Ms.', 'Kitty Song',        'Covey',      '+1',   '5552030630', '2003-06-30', 'American'),
+('peter.kavinsky@ui.ac.id',             crypt('peter123', gen_salt('bf')), 'Mr.', 'Peter',              'Kavinsky',   '+1',   '5551990622', '1999-06-22', 'American'),
+('josh.sanderson@ui.ac.id',             crypt('josh123', gen_salt('bf')), 'Mr.', 'Josh',               'Sanderson',  '+1',   '5559940315', '1994-03-15', 'American'),
 
-('isabel.conklin@yahoo.com',           '$2b$12$IvOlL3tjNO6pQ8sT9wwWwTyZzAaAbBcCdDeEfFgGhHiIjJkKlLmMnNoOo', 'Ms.', 'Isabel',            'Conklin',    '+1',   '5552000125', '2000-01-25', 'American'),
-('steven.conklin@yahoo.com',           '$2b$12$JwPmM4ukOP7qR9tU0xxXxUzAaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpPp', 'Mr.', 'Steven',             'Conklin',    '+1',   '5557040704', '1970-07-04', 'American'),
-('conrad.fisher@yahoo.com',       '$2b$12$KxQnN5vlQP8rS0uV1yyYyVaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqQq', 'Mr.', 'Conrad',             'Fisher',     '+1',   '5552020704', '2002-07-04', 'American'),
-('jeremiah.fisher@yahoo.com',     '$2b$12$LyRoO6wmRQ9sT1vW2zzZzWbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrRr', 'Mr.', 'Jeremiah',           'Fisher',     '+1',   '5552030228', '2003-02-28', 'American'),
+('isabel.conklin@yahoo.com',            crypt('isabel123', gen_salt('bf')), 'Ms.', 'Isabel',            'Conklin',    '+1',   '5552000125', '2000-01-25', 'American'),
+('steven.conklin@yahoo.com',            crypt('steven123', gen_salt('bf')), 'Mr.', 'Steven',             'Conklin',    '+1',   '5557040704', '1970-07-04', 'American'),
+('conrad.fisher@yahoo.com',             crypt('conrad123', gen_salt('bf')), 'Mr.', 'Conrad',             'Fisher',     '+1',   '5552020704', '2002-07-04', 'American'),
+('jeremiah.fisher@yahoo.com',           crypt('jeremiah123', gen_salt('bf')), 'Mr.', 'Jeremiah',           'Fisher',     '+1',   '5552030228', '2003-02-28', 'American'),
 
-('harry.potter@ui.ac.id',           '$2b$12$MzSpP7xoSR0tU2wX3aaAaXcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsSs', 'Mr.', 'Harry',              'Potter',     '+44',  '7921234567', '1980-07-31', 'British'),
-('hermione.granger@ui.ac.id',       '$2b$12$NaToQ8ypTS1uV3xY4bbBbYdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtTt', 'Ms.', 'Hermione',           'Granger',    '+44',  '7931234567', '1979-09-19', 'British'),
-('ron.weasley@ui.ac.id',            '$2b$12$ObUpR9zqUT2vW4yZ5ccCcZeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuUu', 'Mr.', 'Ron',                'Weasley',    '+44',  '7941234567', '1980-03-01', 'British'),
-('draco.malfoy@ui.ac.id',           '$2b$12$PcVqS0arVU3wX5zA6ddDdAfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvVv', 'Mr.', 'Draco',              'Malfoy',     '+44',  '7951234567', '1980-06-05', 'British'),
-('luna.lovegood@ui.ac.id',          '$2b$12$QdWrT1bsWV4xY6aB7eeEeBgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwWw', 'Ms.', 'Luna',               'Lovegood',   '+44',  '7961234567', '1981-02-13', 'British'),
-('oliver.wood@ui.ac.id',            '$2b$12$ReXsU2ctXW5yZ7bC8ffFfChIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxXx', 'Mr.', 'Oliver',             'Wood',       '+44',  '7971234567', '1975-01-15', 'British');
+('harry.potter@ui.ac.id',               crypt('harry123', gen_salt('bf')), 'Mr.', 'Harry',              'Potter',     '+44',  '7921234567', '1980-07-31', 'British'),
+('hermione.granger@ui.ac.id',           crypt('hermione123', gen_salt('bf')), 'Ms.', 'Hermione',           'Granger',    '+44',  '7931234567', '1979-09-19', 'British'),
+('ron.weasley@ui.ac.id',                crypt('ron123', gen_salt('bf')), 'Mr.', 'Ron',                'Weasley',    '+44',  '7941234567', '1980-03-01', 'British'),
+('draco.malfoy@ui.ac.id',               crypt('draco123', gen_salt('bf')), 'Mr.', 'Draco',              'Malfoy',     '+44',  '7951234567', '1980-06-05', 'British'),
+('luna.lovegood@ui.ac.id',              crypt('luna123', gen_salt('bf')), 'Ms.', 'Luna',               'Lovegood',   '+44',  '7961234567', '1981-02-13', 'British'),
+('oliver.wood@ui.ac.id',                crypt('oliver123', gen_salt('bf')), 'Mr.', 'Oliver',             'Wood',       '+44',  '7971234567', '1975-01-15', 'British');
 
 
 CREATE TABLE TIER (
@@ -511,7 +514,6 @@ BEGIN
     RETURN v_pesan;
 END;
 $$ LANGUAGE plpgsql;
-
 
 CREATE OR REPLACE TRIGGER trg_sinkronisasi_award_miles_package
 AFTER INSERT ON MEMBER_AWARD_MILES_PACKAGE
@@ -898,8 +900,19 @@ INSERT INTO HADIAH (nama, miles, deskripsi, valid_start_date, program_end, id_pe
 ('Gratis Bagasi Pesawat 10kg', 2000, 'Tambahan kuota bagasi penerbangan domestik untuk kenyamanan liburan Anda.', '2025-01-01', '2025-12-31', 1),
 ('Akses Airport Premium Lounge', 3000, 'Akses gratis ke premium lounge di bandara selama maksimal 3 jam.', '2025-04-01', '2025-12-31', 2),
 ('Diskon Sewa Mobil 30%', 1500, 'Potongan untuk penyewaan mobil harian di berbagai kota besar.', '2025-05-01', '2025-10-31', 3),
-('Voucher Spa & Pijat 90 Menit', 2200, 'Paket relaksasi komplit di pusat spa eksklusif mitra kami.', '2025-07-01', '2025-12-31', 4);
-
+('Voucher Spa & Pijat 90 Menit', 2200, 'Paket relaksasi komplit di pusat spa eksklusif mitra kami.', '2025-07-01', '2025-12-31', 4),
+('Voucher Kopi Rp50.000', 500, 'Nikmati kopi gratis atau potongan harga di gerai partner kami.', '2026-05-01', '2026-06-30', 1),
+('Tiket Nonton Bioskop Premiere', 1200, 'Satu tiket nonton film premier di akhir pekan, berlaku di seluruh cabang.', '2026-05-01', '2026-07-15', 2),
+('Merchandise Kaos Eksklusif', 2500, 'Kaos edisi terbatas khusus untuk member loyalty program.', '2026-05-10', '2026-12-31', 3),
+('Diskon 20% Belanja Supermarket', 800, 'Potongan harga maksimal Rp100.000 untuk belanja bulanan Anda.', '2026-05-01', '2026-06-15', 4),
+('Voucher Menginap Hotel Bintang 4', 15000, 'Gratis menginap 1 malam untuk tipe kamar Deluxe (termasuk sarapan).', '2026-05-15', '2026-08-31', 5),
+('E-Money Saldo Rp100.000', 1000, 'Top up saldo e-money langsung ke nomor ponsel yang terdaftar.', '2026-01-01', '2027-01-01', 6),
+('Paket Liburan Bali 3H2M', 50000, 'Paket tour lengkap ke Bali untuk 1 orang, sudah termasuk tiket pesawat.', '2026-05-01', '2026-12-31', 7),
+('Voucher Makan Malam Romantis', 3500, 'Set menu fine dining untuk 2 orang di restoran mitra kami.', '2026-05-10', '2026-06-10', 8),
+('Gratis Bagasi Pesawat 10kg', 2000, 'Tambahan kuota bagasi penerbangan domestik untuk kenyamanan liburan Anda.', '2026-05-01', '2026-12-31', 1),
+('Akses Airport Premium Lounge', 3000, 'Akses gratis ke premium lounge di bandara selama maksimal 3 jam.', '2026-04-01', '2026-12-31', 2),
+('Diskon Sewa Mobil 30%', 1500, 'Potongan untuk penyewaan mobil harian di berbagai kota besar.', '2026-05-01', '2026-10-31', 3),
+('Voucher Spa & Pijat 90 Menit', 2200, 'Paket relaksasi komplit di pusat spa eksklusif mitra kami.', '2026-05-01', '2026-07-01', 4);
 
 CREATE TABLE REDEEM (
     email_member         VARCHAR(100)   NOT NULL,
@@ -915,6 +928,33 @@ CREATE OR REPLACE TRIGGER trg_validasi_redeem_hadiah
 BEFORE INSERT ON REDEEM
 FOR EACH ROW
 EXECUTE FUNCTION fn_validasi_redeem_hadiah();
+
+CREATE OR REPLACE FUNCTION fn_redeem_hadiah(
+    p_email VARCHAR(100),
+    p_kode_hadiah VARCHAR(20)
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_nama_hadiah VARCHAR(100);
+    v_miles_hadiah INT;
+BEGIN
+    -- Get hadiah info for message
+    SELECT nama, miles INTO v_nama_hadiah, v_miles_hadiah
+    FROM HADIAH
+    WHERE kode_hadiah = p_kode_hadiah;
+    
+    -- Insert into REDEEM table (validation via trigger)
+    INSERT INTO REDEEM (email_member, kode_hadiah, timestamp)
+    VALUES (p_email, p_kode_hadiah, NOW());
+    
+    -- Return success message matching trigger's NOTICE
+    RETURN 'SUKSES: Redeem hadiah "' || v_nama_hadiah || '" berhasil. Award miles Anda berkurang ' || v_miles_hadiah || ' miles.';
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN 'ERROR: ' || SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
 
 
 INSERT INTO REDEEM (email_member, kode_hadiah, timestamp) VALUES
