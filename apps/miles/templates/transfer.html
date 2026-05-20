@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}AeroMiles - Transfer Miles{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;">
+        <div>
+        <h1 style="font-size:1.4rem;margin-bottom:.2rem;">Transfer Miles</h1>
+        <p class="text-muted text-sm">Award Miles tersedia: <strong style="color:var(--blue-primary);">{{ award_miles|floatformat:0 }}</strong></p>
+        </div>
+        <button class="btn-primary" onclick="openModal('transferModal')">+ Transfer Baru</button>
+    </div>
+
+    {% if errors %}
+    <div class="alert alert-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+    {% endif %}
+
+    <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);">
+        <p style="font-weight:700;color:var(--text-primary);">Riwayat Transfer</p>
+        </div>
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
+            <thead>
+            <tr style="background:var(--bg-tint);border-bottom:1.5px solid var(--border);">
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Waktu</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Member</th>
+                <th style="text-align:right;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Jumlah Miles</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Catatan</th>
+                <th style="text-align:left;padding:.75rem 1rem;font-weight:600;color:var(--text-secondary);">Tipe</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for t in transfers %}
+                <tr style="border-bottom:1px solid var(--border);transition:background .1s;" onmouseover="this.style.background='var(--bg-tint)'" onmouseout="this.style.background=''">
+                    <!-- Waktu Transfer -->
+                    <td style="padding:.7rem 1rem;font-size:.82rem;color:var(--text-secondary);">{{ t.timestamp }}</td>
+                    
+                    <!-- Informasi Member Lawan -->
+                    <td style="padding:.7rem 1rem;">
+                        <div style="font-weight:500;">{{ t.nama_lawan }}</div>
+                        <div style="font-size:.78rem;color:var(--text-secondary);">{{ t.email_lawan }}</div>
+                    </td>
+                    
+                    <!-- Jumlah Miles dengan Logika Warna & Simbol -->
+                    <td style="padding:.7rem 1rem;text-align:right;font-weight:700;
+                        color:{% if t.tipe == 'Terima' %}#16A34A{% else %}#DC2626{% endif %};">
+                        {% if t.tipe == 'Terima' %}+{% else %}-{% endif %}{{ t.jumlah|floatformat:0 }}
+                    </td>
+                    
+                    <!-- Catatan -->
+                    <td style="padding:.7rem 1rem;color:var(--text-secondary);">{{ t.catatan|default:'–' }}</td>
+                    
+                    <!-- Label Tipe -->
+                    <td style="padding:.7rem 1rem;">
+                        {% if t.tipe == 'Kirim' %}
+                        <span style="background:#FEF3C7;color:#D97706;padding:.2rem .6rem;border-radius:.4rem;font-size:.8rem;font-weight:600;">Kirim</span>
+                        {% else %}
+                        <span style="background:#DCFCE7;color:#16A34A;padding:.2rem .6rem;border-radius:.4rem;font-size:.8rem;font-weight:600;">Terima</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="padding:2rem;text-align:center;color:var(--text-secondary);">Belum ada riwayat transfer.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+        
+{% include '_transfer_modal.html' %}
+
+<script>
+    function openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    {% if errors %}
+        openModal('transferModal');
+    {% endif %}
+</script>
+{% endblock %}

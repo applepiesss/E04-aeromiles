@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}AeroMiles - Manajemen Hadiah & Penyedia{% endblock %}
+
+{% block extra_head %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, var(--blue-soft), var(--blue-light), var(--bg-surface));
+        padding: 2rem;
+        border-radius: var(--radius-xl);
+        color: var(--text-primary);
+        box-shadow: 0 4px 12px rgba(127, 179, 255, 0.15);
+    }
+
+    .page-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: var(--text-primary);
+        opacity: 0.9;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* Table Styles */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .table th {
+        background-color: var(--bg-surface);
+        color: var(--text-primary);
+        padding: 1rem;
+        font-weight: 600;
+        border-bottom: 2px solid var(--border);
+        white-space: nowrap;
+    }
+
+    .table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover { background-color: #F8FAFC; }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-active {
+        background: linear-gradient(135deg, var(--blue-light), var(--border));
+        color: var(--text-primary);
+    }
+    .badge-inactive {
+        background-color: #F1F5F9;
+        color: #64748B;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        border-radius: var(--radius-md);
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .btn-edit {
+        background-color: var(--bg-surface);
+        color: var(--blue-primary);
+        border: 1px solid var(--border);
+    }
+    .btn-edit:hover { background-color: var(--blue-light); }
+    
+    .btn-delete {
+        background-color: #FEE2E2;
+        color: #DC2626;
+        border: 1px solid #FECACA;
+    }
+    .btn-delete:hover:not(:disabled) { background-color: #FCA5A5; }
+    .btn-delete:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(30, 58, 95, 0.4);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    .modal-content {
+        background: var(--white);
+        border-radius: var(--radius-xl);
+        width: 100%;
+        max-width: 600px;
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    .modal-overlay.active .modal-content {
+        transform: translateY(0);
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .btn-close {
+        background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);
+    }
+    .modal-footer {
+        display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <h1>Katalog Hadiah & Penyedia</h1>
+            <p>Kelola daftar hadiah, mitra penyedia, dan periode validitas program AeroMiles.</p>
+        </div>
+        <button type="button" class="btn-primary" onclick="openModal('formModal')">+ Tambah Hadiah</button>
+    </div>
+
+    <div class="card">
+        <div class="filter-section">
+            <div class="form-group" style="margin-bottom: 0;">
+                <select id="filterVendor" class="form-control" onchange="filterTable()">
+                    <option value="">Semua Penyedia</option>
+                    {% for v in vendors %}
+                        <option value="{{ v.nama }}">{{ v.nama }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <select id="filterStatus" class="form-control" onchange="filterTable()">
+                    <option value="">Semua Status</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Nonaktif / Kadaluarsa</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Kode</th>
+                        <th>Nama Hadiah</th>
+                        <th>Deskripsi</th>
+                        <th>Penyedia</th>
+                        <th>Miles</th>
+                        <th>Periode Valid</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for r in rewards %}
+                    <tr data-vendor="{{ r.nama_penyedia }}" data-status="{{ r.status }}">
+                        <td><strong style="color: var(--text-primary);">{{ r.kode_hadiah }}</strong></td>
+                        <td>{{ r.nama }}</td>
+                        <td title="{{ r.deskripsi }}">{{ r.deskripsi|truncatechars:35 }}</td>
+                        <td>{{ r.nama_penyedia }}</td>
+                        <td>{{ r.miles }}</td>
+                        <td>{{ r.valid_start_date_fmt }} - {{ r.program_end_fmt }}</td>
+                        <td><span class="badge {{ r.badge_class }}">{{ r.status_text }}</span></td>
+                        <td style="text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button type="button" class="btn-action btn-edit" onclick="editReward('{{ r.kode_hadiah }}', '{{ r.nama|escapejs }}', '{{ r.id_penyedia }}', '{{ r.miles }}', '{{ r.deskripsi|escapejs }}', '{{ r.valid_start_date_iso }}', '{{ r.program_end_iso }}')">Edit</button>
+                            <button type="button" class="btn-action btn-delete" onclick="promptDelete('{{ r.kode_hadiah }}', '{{ r.nama|escapejs }}')" {% if r.status != 'expired' %}title="Hanya bisa dihapus jika kadaluarsa" disabled{% endif %}>Hapus</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted">Tidak ada data hadiah.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="formModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalFormTitle">Tambah Hadiah Baru</h2>
+            <button type="button" class="btn-close" onclick="closeModal('formModal')">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'vendors:save_hadiah' %}" id="rewardForm">
+            {% csrf_token %}
+            <input type="hidden" name="kode" id="rewardId">
+            
+            <div class="form-group">
+                <label class="form-label">Kode Hadiah (Auto Generate)</label>
+                <input type="text" id="rewardCode" class="form-control" placeholder="Akan digenerate otomatis" disabled>
+            </div>
+
+            <div class="form-row" style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Nama Hadiah <span style="color:red">*</span></label>
+                    <input type="text" name="nama" id="rewardName" class="form-control" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Penyedia <span style="color:red">*</span></label>
+                    <select name="vendor" id="rewardVendor" class="form-control" required>
+                        <option value="">Pilih Penyedia</option>
+                        {% for v in vendors %}
+                            <option value="{{ v.id }}">{{ v.nama }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nilai Miles <span style="color:red">*</span></label>
+                <input type="number" name="miles" id="rewardMiles" class="form-control" min="1" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Deskripsi</label>
+                <textarea name="desc" id="rewardDesc" class="form-control" rows="3" required></textarea>
+            </div>
+
+            <div class="form-row" style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Tgl Berlaku (Mulai) <span style="color:red">*</span></label>
+                    <input type="date" name="start" id="rewardStart" class="form-control" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Tgl Berakhir <span style="color:red">*</span></label>
+                    <input type="date" name="end" id="rewardEnd" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('formModal')">Batal</button>
+                <button type="submit" class="btn-primary">Simpan Data</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div style="margin-bottom: 1rem; color: #DC2626; font-size: 3rem;">⚠️</div>
+        <h2 class="modal-title">Hapus Hadiah?</h2>
+        <p class="text-muted mt-1" style="font-size: 0.9rem;">
+            Apakah Anda yakin ingin menghapus <strong id="deleteRewardName"></strong>? Data yang dihapus tidak dapat dikembalikan.
+        </p>
+        <form method="POST" action="{% url 'vendors:delete_hadiah' %}">
+            {% csrf_token %}
+            <input type="hidden" name="kode" id="deleteRewardId">
+            <div class="modal-footer" style="justify-content: center; margin-top: 2rem;">
+                <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+                <button type="submit" class="btn-primary" style="background: #DC2626;">Ya, Hapus</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function filterTable() {
+        const vendor = document.getElementById('filterVendor').value;
+        const status = document.getElementById('filterStatus').value;
+        const rows = document.querySelectorAll('#tableBody tr[data-vendor]');
+        
+        rows.forEach(row => {
+            const rowVendor = row.getAttribute('data-vendor');
+            const rowStatus = row.getAttribute('data-status');
+            
+            let matchVendor = vendor === "" || rowVendor === vendor;
+            let matchStatus = status === "";
+            
+            if (status === 'active' && rowStatus === 'active') matchStatus = true;
+            if (status === 'inactive' && (rowStatus === 'expired' || rowStatus === 'upcoming')) matchStatus = true;
+            
+            row.style.display = (matchVendor && matchStatus) ? "" : "none";
+        });
+    }
+
+    function openModal(modalId) {
+        if(modalId === 'formModal' && !document.getElementById('rewardId').value) {
+            document.getElementById('modalFormTitle').innerText = "Tambah Hadiah Baru";
+            document.getElementById('rewardForm').reset();
+            document.getElementById('rewardCode').value = ''; 
+        }
+        document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+        if(modalId === 'formModal') {
+            document.getElementById('rewardForm').reset();
+            document.getElementById('rewardId').value = '';
+        }
+    }
+
+    function editReward(code, name, vendor_id, miles, desc, start, end) {
+        document.getElementById('modalFormTitle').innerText = "Edit Hadiah";
+        document.getElementById('rewardId').value = code;
+        document.getElementById('rewardCode').value = code;
+        document.getElementById('rewardName').value = name;
+        document.getElementById('rewardVendor').value = vendor_id;
+        document.getElementById('rewardMiles').value = miles;
+        document.getElementById('rewardDesc').value = desc;
+        document.getElementById('rewardStart').value = start;
+        document.getElementById('rewardEnd').value = end;
+        openModal('formModal');
+    }
+
+    function promptDelete(code, name) {
+        document.getElementById('deleteRewardId').value = code;
+        document.getElementById('deleteRewardName').innerText = name;
+        openModal('deleteModal');
+    }
+</script>
+{% endblock content %}
