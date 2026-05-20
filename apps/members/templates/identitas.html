@@ -100,7 +100,6 @@
             <div class="form-group">
                 <label class="form-label">Nomor Dokumen</label>
                 <input type="text" name="nomor" class="form-control" placeholder="Contoh: ID-PP-001" required>
-                <p style="font-size:.78rem;color:var(--text-secondary);margin-top:.3rem">Nomor dokumen harus unik dalam sistem.</p>
             </div>
             <div class="form-group">
                 <label class="form-label">Jenis Dokumen</label>
@@ -143,28 +142,23 @@
             <div class="form-group">
                 <label class="form-label">Nomor Dokumen</label>
                 <input type="text" id="edit-nomor-display" class="form-control field-readonly" disabled>
-                <p style="font-size:.78rem;color:var(--text-secondary);margin-top:.3rem">Nomor dokumen tidak dapat diubah.</p>
             </div>
             <div class="form-group">
                 <label class="form-label">Jenis Dokumen</label>
-                <select id="edit-jenis" name="jenis" class="form-control">
-                    <option value="Paspor">Paspor</option>
-                    <option value="KTP">KTP</option>
-                    <option value="SIM">SIM</option>
-                </select>
+                <input type="text" id="edit-jenis-display" class="form-control field-readonly" disabled>
             </div>
             <div class="form-group">
                 <label class="form-label">Negara Penerbit</label>
-                <input type="text" id="edit-negara" name="negara_penerbit" class="form-control">
+                <input type="text" id="edit-negara-display" class="form-control field-readonly" disabled>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Tanggal Terbit</label>
-                    <input type="date" id="edit-tanggal-terbit" name="tanggal_terbit" class="form-control">
+                    <input type="date" id="edit-tanggal-terbit" name="tanggal_terbit" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Tanggal Habis</label>
-                    <input type="date" id="edit-tanggal-habis" name="tanggal_habis" class="form-control">
+                    <input type="date" id="edit-tanggal-habis" name="tanggal_habis" class="form-control" required>
                 </div>
             </div>
             <div class="modal-footer">
@@ -213,8 +207,8 @@ function openEdit(btn) {
     const d = btn.dataset;
     const habis = d.tanggalHabis === '9999-12-31' ? '' : d.tanggalHabis;
     document.getElementById('edit-nomor-display').value  = d.nomor;
-    document.getElementById('edit-jenis').value          = d.jenis;
-    document.getElementById('edit-negara').value         = d.negara;
+    document.getElementById('edit-jenis-display').value  = d.jenis;
+    document.getElementById('edit-negara-display').value = d.negara;
     document.getElementById('edit-tanggal-terbit').value = d.tanggalTerbit;
     document.getElementById('edit-tanggal-habis').value  = habis;
     document.getElementById('edit-form').action =
