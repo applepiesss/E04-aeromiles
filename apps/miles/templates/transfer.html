@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load custom_filters %}
 {% block title %}AeroMiles - Transfer Miles{% endblock %}
 
 {% block content %}
@@ -9,7 +8,7 @@
         <h1 style="font-size:1.4rem;margin-bottom:.2rem;">Transfer Miles</h1>
         <p class="text-muted text-sm">Award Miles tersedia: <strong style="color:var(--blue-primary);">{{ award_miles|floatformat:0 }}</strong></p>
         </div>
-        <button class="btn-primary" onclick="document.getElementById('transferModal').style.display='flex'">+ Transfer Baru</button>
+        <button class="btn-primary" onclick="openModal('transferModal')">+ Transfer Baru</button>
     </div>
 
     {% if errors %}
@@ -35,7 +34,7 @@
                 {% for t in transfers %}
                 <tr style="border-bottom:1px solid var(--border);transition:background .1s;" onmouseover="this.style.background='var(--bg-tint)'" onmouseout="this.style.background=''">
                     <!-- Waktu Transfer -->
-                    <td style="padding:.7rem 1rem;font-size:.82rem;color:var(--text-secondary);">{{ t.waktu }}</td>
+                    <td style="padding:.7rem 1rem;font-size:.82rem;color:var(--text-secondary);">{{ t.timestamp }}</td>
                     
                     <!-- Informasi Member Lawan -->
                     <td style="padding:.7rem 1rem;">
@@ -50,7 +49,7 @@
                     </td>
                     
                     <!-- Catatan -->
-                    <td style="padding:.7rem 1rem;color:var(--text-secondary);">{{ t.keterangan|default:'–' }}</td>
+                    <td style="padding:.7rem 1rem;color:var(--text-secondary);">{{ t.catatan|default:'–' }}</td>
                     
                     <!-- Label Tipe -->
                     <td style="padding:.7rem 1rem;">
@@ -68,46 +67,21 @@
         </table>
         </div>
     </div>
-    </div>
-
-    <div id="transferModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:var(--radius-xl);padding:2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-        <h2 style="font-size:1.1rem;">Transfer Miles</h2>
-        <button onclick="document.getElementById('transferModal').style.display='none'" style="border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--text-secondary);">×</button>
-        </div>
-        <form method="post" action="{% url 'miles:transfer_create' %}">
-        {% csrf_token %}
-        <div class="form-group">
-            <label class="form-label">Email Penerima</label>
-            <input type="email" name="email_penerima" class="form-control"
-                placeholder="email@example.com"
-                value="{{ form.email_penerima|default:'' }}" required>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Jumlah Miles</label>
-            <input type="number" name="jumlah" class="form-control"
-                min="1" max="{{ award_miles }}"
-                value="{{ form.jumlah|default:'' }}" required>
-            <p style="font-size:.78rem;color:var(--text-secondary);margin-top:.3rem;">Saldo tersedia: {{ award_miles|floatformat:0 }} award miles</p>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Catatan (opsional)</label>
-            <textarea name="catatan" class="form-control" rows="2"
-                    style="resize:vertical;">{{ form.catatan|default:'' }}</textarea>
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:.5rem;">
-            <button type="button" class="btn-secondary"
-            onclick="document.getElementById('transferModal').style.display='none'">Batal</button>
-            <button type="submit" class="btn-primary">Transfer</button>
-        </div>
-        </form>
-    </div>
 </div>
+        
+{% include '_transfer_modal.html' %}
 
 <script>
-{% if show_modal %}
-document.getElementById('transferModal').style.display = 'flex';
-{% endif %}
+    function openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    {% if errors %}
+        openModal('transferModal');
+    {% endif %}
 </script>
 {% endblock %}
