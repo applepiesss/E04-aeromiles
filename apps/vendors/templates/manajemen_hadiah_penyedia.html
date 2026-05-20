@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-<<<<<<< HEAD
 {% block title %}AeroMiles - Manajemen Hadiah & Penyedia{% endblock %}
 
 {% block extra_head %}
@@ -13,48 +12,10 @@
         background: linear-gradient(135deg, var(--blue-soft), var(--blue-light), var(--bg-surface));
         padding: 2rem;
         border-radius: var(--radius-xl);
-=======
-{% block content %}
-<style>
-    /* CSS Variables berdasarkan pedoman desain Aero Miles */
-    :root {
-        --primary-blue: #4A90E2;
-        --primary-hover: #3B7AC4;
-        --soft-blue: #7FB3FF;
-        --light-blue: #A5C8FF;
-        --bg-tint: #F0F7FF;
-        --soft-surface: #E0EFFF;
-        --border-color: #DBEAFE;
-        --white: #FFFFFF;
-        --text-primary: #1E3A5F;
-        --text-secondary: #3B5F8A;
-    }
-
-    .rewards-management-wrapper {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: var(--bg-tint);
-        color: var(--text-secondary);
-        padding: 32px 20px;
-        min-height: 100vh;
-    }
-
-    .rm-container {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    /* Hero / Title Section */
-    .rm-page-header {
-        margin-bottom: 24px;
-        padding: 24px 32px;
-        background: linear-gradient(135deg, var(--soft-blue), var(--light-blue), var(--soft-surface));
-        border-radius: 16px;
->>>>>>> 9692464ff9d16a7dad33a6e11bc77ea5946241dd
         color: var(--text-primary);
         box-shadow: 0 4px 12px rgba(127, 179, 255, 0.15);
     }
 
-<<<<<<< HEAD
     .page-header h1 {
         font-size: 1.75rem;
         font-weight: 700;
@@ -80,103 +41,11 @@
     }
 
     .table {
-=======
-    .rm-page-header h1 {
-        font-size: 28px;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .rm-page-header p {
-        color: var(--text-primary);
-        opacity: 0.9;
-        font-size: 16px;
-        margin: 0;
-    }
-
-    /* Card Container */
-    .rm-card {
-        background-color: var(--white);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 24px 32px;
-        box-shadow: 0 4px 12px rgba(127, 179, 255, 0.08);
-        margin-bottom: 24px;
-    }
-
-    /* Filter Section */
-    .rm-filter-section {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 24px;
-        align-items: flex-end;
-        flex-wrap: wrap;
-        padding-bottom: 24px;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .rm-filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .rm-filter-group label {
-        font-size: 14px;
-        color: var(--text-primary);
-        font-weight: 600;
-    }
-
-    .rm-filter-group select, .rm-filter-group input {
-        padding: 10px 16px;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        color: var(--text-secondary);
-        background-color: var(--white);
-        outline: none;
-        min-width: 220px;
-        transition: border-color 0.3s;
-        font-size: 14px;
-    }
-
-    .rm-filter-group select:focus, .rm-filter-group input:focus {
-        border-color: var(--primary-blue);
-    }
-
-    /* Buttons */
-    .rm-btn {
-        padding: 10px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        border: none;
-        transition: all 0.3s ease;
-        font-size: 14px;
-    }
-
-    .rm-btn-primary {
-        background-color: var(--primary-blue);
-        color: var(--white);
-    }
-
-    .rm-btn-primary:hover {
-        background-color: var(--primary-hover);
-    }
-
-    /* Table Styles */
-    .rm-table-responsive {
-        overflow-x: auto;
-    }
-
-    .rm-table {
->>>>>>> 9692464ff9d16a7dad33a6e11bc77ea5946241dd
         width: 100%;
         border-collapse: collapse;
         text-align: left;
     }
 
-<<<<<<< HEAD
     .table th {
         background-color: var(--bg-surface);
         color: var(--text-primary);
@@ -302,22 +171,21 @@
             <h1>Katalog Hadiah & Penyedia</h1>
             <p>Kelola daftar hadiah, mitra penyedia, dan periode validitas program AeroMiles.</p>
         </div>
-        <button class="btn-primary" onclick="openModal('formModal')">+ Tambah Hadiah</button>
+        <button type="button" class="btn-primary" onclick="openModal('formModal')">+ Tambah Hadiah</button>
     </div>
 
     <div class="card">
         <div class="filter-section">
             <div class="form-group" style="margin-bottom: 0;">
-                <select id="filterVendor" class="form-control" onchange="renderTable()">
+                <select id="filterVendor" class="form-control" onchange="filterTable()">
                     <option value="">Semua Penyedia</option>
-                    <option value="Garuda Indonesia">Garuda Indonesia</option>
-                    <option value="Starbucks">Starbucks</option>
-                    <option value="Traveloka">Traveloka</option>
-                    <option value="AeroMiles">AeroMiles (Internal)</option>
+                    {% for v in vendors %}
+                        <option value="{{ v.nama }}">{{ v.nama }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-                <select id="filterStatus" class="form-control" onchange="renderTable()">
+                <select id="filterStatus" class="form-control" onchange="filterTable()">
                     <option value="">Semua Status</option>
                     <option value="active">Aktif</option>
                     <option value="inactive">Nonaktif / Kadaluarsa</option>
@@ -340,7 +208,24 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    </tbody>
+                    {% for r in rewards %}
+                    <tr data-vendor="{{ r.nama_penyedia }}" data-status="{{ r.status }}">
+                        <td><strong style="color: var(--text-primary);">{{ r.kode_hadiah }}</strong></td>
+                        <td>{{ r.nama }}</td>
+                        <td title="{{ r.deskripsi }}">{{ r.deskripsi|truncatechars:35 }}</td>
+                        <td>{{ r.nama_penyedia }}</td>
+                        <td>{{ r.miles }}</td>
+                        <td>{{ r.valid_start_date_fmt }} - {{ r.program_end_fmt }}</td>
+                        <td><span class="badge {{ r.badge_class }}">{{ r.status_text }}</span></td>
+                        <td style="text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button type="button" class="btn-action btn-edit" onclick="editReward('{{ r.kode_hadiah }}', '{{ r.nama|escapejs }}', '{{ r.id_penyedia }}', '{{ r.miles }}', '{{ r.deskripsi|escapejs }}', '{{ r.valid_start_date_iso }}', '{{ r.program_end_iso }}')">Edit</button>
+                            <button type="button" class="btn-action btn-delete" onclick="promptDelete('{{ r.kode_hadiah }}', '{{ r.nama|escapejs }}')" {% if r.status != 'expired' %}title="Hanya bisa dihapus jika kadaluarsa" disabled{% endif %}>Hapus</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted">Tidak ada data hadiah.</td></tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>
@@ -350,51 +235,51 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title" id="modalFormTitle">Tambah Hadiah Baru</h2>
-            <button class="btn-close" onclick="closeModal('formModal')">&times;</button>
+            <button type="button" class="btn-close" onclick="closeModal('formModal')">&times;</button>
         </div>
-        <form id="rewardForm" onsubmit="saveReward(event)">
-            <input type="hidden" id="rewardId">
+        <form method="POST" action="{% url 'vendors:save_hadiah' %}" id="rewardForm">
+            {% csrf_token %}
+            <input type="hidden" name="kode" id="rewardId">
             
             <div class="form-group">
                 <label class="form-label">Kode Hadiah (Auto Generate)</label>
                 <input type="text" id="rewardCode" class="form-control" placeholder="Akan digenerate otomatis" disabled>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
+            <div class="form-row" style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
                     <label class="form-label">Nama Hadiah <span style="color:red">*</span></label>
-                    <input type="text" id="rewardName" class="form-control" required>
+                    <input type="text" name="nama" id="rewardName" class="form-control" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex: 1;">
                     <label class="form-label">Penyedia <span style="color:red">*</span></label>
-                    <select id="rewardVendor" class="form-control" required>
+                    <select name="vendor" id="rewardVendor" class="form-control" required>
                         <option value="">Pilih Penyedia</option>
-                        <option value="Garuda Indonesia">Garuda Indonesia</option>
-                        <option value="Starbucks">Starbucks</option>
-                        <option value="Traveloka">Traveloka</option>
-                        <option value="AeroMiles">AeroMiles (Internal)</option>
+                        {% for v in vendors %}
+                            <option value="{{ v.id }}">{{ v.nama }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Nilai Miles <span style="color:red">*</span></label>
-                <input type="number" id="rewardMiles" class="form-control" min="1" required>
+                <input type="number" name="miles" id="rewardMiles" class="form-control" min="1" required>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Deskripsi</label>
-                <textarea id="rewardDesc" class="form-control" rows="3" required></textarea>
+                <textarea name="desc" id="rewardDesc" class="form-control" rows="3" required></textarea>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
+            <div class="form-row" style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
                     <label class="form-label">Tgl Berlaku (Mulai) <span style="color:red">*</span></label>
-                    <input type="date" id="rewardStart" class="form-control" required>
+                    <input type="date" name="start" id="rewardStart" class="form-control" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex: 1;">
                     <label class="form-label">Tgl Berakhir <span style="color:red">*</span></label>
-                    <input type="date" id="rewardEnd" class="form-control" required>
+                    <input type="date" name="end" id="rewardEnd" class="form-control" required>
                 </div>
             </div>
 
@@ -408,134 +293,42 @@
 
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <div style="margin-bottom: 1rem; color: #DC2626; font-size: 3rem;">
-            ⚠️
-        </div>
+        <div style="margin-bottom: 1rem; color: #DC2626; font-size: 3rem;">⚠️</div>
         <h2 class="modal-title">Hapus Hadiah?</h2>
         <p class="text-muted mt-1" style="font-size: 0.9rem;">
             Apakah Anda yakin ingin menghapus <strong id="deleteRewardName"></strong>? Data yang dihapus tidak dapat dikembalikan.
         </p>
-        <input type="hidden" id="deleteRewardId">
-        <div class="modal-footer" style="justify-content: center; margin-top: 2rem;">
-            <button class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
-            <button class="btn-primary" style="background: #DC2626;" onclick="confirmDelete()">Ya, Hapus</button>
-        </div>
+        <form method="POST" action="{% url 'vendors:delete_hadiah' %}">
+            {% csrf_token %}
+            <input type="hidden" name="kode" id="deleteRewardId">
+            <div class="modal-footer" style="justify-content: center; margin-top: 2rem;">
+                <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+                <button type="submit" class="btn-primary" style="background: #DC2626;">Ya, Hapus</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-    let rewards = [
-        { 
-            code: "RWD-001", 
-            name: "Voucher Kopi Rp50.000", 
-            desc: "Nikmati kopi gratis atau potongan harga di gerai partner kami.", 
-            vendor: "Starbucks", 
-            miles: 500, 
-            start: "2025-01-01", 
-            end: "2025-12-31" 
-        },
-        { 
-            code: "RWD-002", 
-            name: "Gratis Bagasi Pesawat 10kg", 
-            desc: "Tambahan kuota bagasi penerbangan domestik untuk kenyamanan liburan Anda.", 
-            vendor: "Garuda Indonesia", 
-            miles: 2000, 
-            start: "2025-01-01", 
-            end: "2025-12-31" 
-        },
-        { 
-            code: "RWD-003", 
-            name: "Voucher Menginap Hotel Bintang 4", 
-            desc: "Gratis menginap 1 malam untuk tipe kamar Deluxe (termasuk sarapan).", 
-            vendor: "Traveloka", 
-            miles: 15000, 
-            start: "2025-06-01", 
-            end: "2025-12-31" 
-        },
-        { 
-            code: "RWD-004", 
-            name: "Akses Airport Premium Lounge", 
-            desc: "Akses gratis ke premium lounge di bandara selama maksimal 3 jam.", 
-            vendor: "Garuda Indonesia", 
-            miles: 3000, 
-            start: "2025-04-01", 
-            end: "2025-12-31" 
-        },
-        { 
-            code: "RWD-005", 
-            name: "Tiket Nonton Bioskop Premiere", 
-            desc: "Satu tiket nonton film premier di akhir pekan, berlaku di seluruh cabang.", 
-            vendor: "AeroMiles", 
-            miles: 1200, 
-            start: "2025-02-01", 
-            end: "2025-11-30" 
-        }
-    ];
-
-    // Format Tanggal untuk display UI
-    function formatDate(dateStr) {
-        const options = { day: '2-digit', month: 'short', year: 'numeric' };
-        return new Date(dateStr).toLocaleDateString('id-ID', options);
-    }
-
-    // Mendapatkan Status Keaktifan
-    function getStatus(start, end) {
-        const today = new Date().toISOString().split('T')[0];
-        if (today > end) return 'expired';
-        if (today < start) return 'upcoming';
-        return 'active';
-    }
-
-    // Merender Table berdasarkan filter dan state data
-    function renderTable() {
-        const tbody = document.getElementById('tableBody');
-        const filterVendor = document.getElementById('filterVendor').value;
-        const filterStatus = document.getElementById('filterStatus').value;
-        tbody.innerHTML = '';
-
-        let filteredRewards = rewards.filter(r => {
-            const statusStr = getStatus(r.start, r.end);
-            let matchVendor = filterVendor === '' || r.vendor === filterVendor;
-            let matchStatus = filterStatus === '';
+    function filterTable() {
+        const vendor = document.getElementById('filterVendor').value;
+        const status = document.getElementById('filterStatus').value;
+        const rows = document.querySelectorAll('#tableBody tr[data-vendor]');
+        
+        rows.forEach(row => {
+            const rowVendor = row.getAttribute('data-vendor');
+            const rowStatus = row.getAttribute('data-status');
             
-            if (filterStatus === 'active' && statusStr === 'active') matchStatus = true;
-            if (filterStatus === 'inactive' && (statusStr === 'expired' || statusStr === 'upcoming')) matchStatus = true;
-
-            return matchVendor && matchStatus;
-        });
-
-        if(filteredRewards.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">Tidak ada data hadiah.</td></tr>`;
-            return;
-        }
-
-        filteredRewards.forEach(r => {
-            const status = getStatus(r.start, r.end);
-            const isActive = status === 'active';
-            const isExpired = status === 'expired';
+            let matchVendor = vendor === "" || rowVendor === vendor;
+            let matchStatus = status === "";
             
-            const badgeClass = isActive ? 'badge-active' : 'badge-inactive';
-            const badgeText = isActive ? 'Aktif' : (isExpired ? 'Kadaluarsa' : 'Akan Datang');
+            if (status === 'active' && rowStatus === 'active') matchStatus = true;
+            if (status === 'inactive' && (rowStatus === 'expired' || rowStatus === 'upcoming')) matchStatus = true;
             
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong style="color: var(--text-primary);">${r.code}</strong></td>
-                <td>${r.name}</td>
-                <td>${r.desc.substring(0, 30)}...</td>
-                <td>${r.vendor}</td>
-                <td>${Number(r.miles).toLocaleString('id-ID')}</td>
-                <td>${formatDate(r.start)} - ${formatDate(r.end)}</td>
-                <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-                <td style="text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
-                    <button class="btn-action btn-edit" onclick="editReward('${r.code}')">Edit</button>
-                    <button class="btn-action btn-delete" onclick="promptDelete('${r.code}', '${r.name}')" ${!isExpired ? 'title="Hanya bisa dihapus jika kadaluarsa" disabled' : ''}>Hapus</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+            row.style.display = (matchVendor && matchStatus) ? "" : "none";
         });
     }
 
-    // Modal Control
     function openModal(modalId) {
         if(modalId === 'formModal' && !document.getElementById('rewardId').value) {
             document.getElementById('modalFormTitle').innerText = "Tambah Hadiah Baru";
@@ -553,208 +346,23 @@
         }
     }
 
-    // CREATE / UPDATE Logic
-    function saveReward(e) {
-        e.preventDefault();
-        
-        const idValue = document.getElementById('rewardId').value;
-        const name = document.getElementById('rewardName').value;
-        const vendor = document.getElementById('rewardVendor').value;
-        const miles = document.getElementById('rewardMiles').value;
-        const desc = document.getElementById('rewardDesc').value;
-        const start = document.getElementById('rewardStart').value;
-        const end = document.getElementById('rewardEnd').value;
-
-        if (start > end) {
-            alert('Tanggal berakhir tidak boleh lebih kecil dari tanggal mulai.');
-            return;
-        }
-
-        if (idValue) {
-            // Update Data
-            const index = rewards.findIndex(r => r.code === idValue);
-            if(index > -1) {
-                rewards[index] = { code: idValue, name, vendor, miles, desc, start, end };
-            }
-        } else {
-            // Create Data - Auto Generate Code (RWD-XXX)
-            const newCode = 'RWD-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            rewards.push({ code: newCode, name, vendor, miles, desc, start, end });
-        }
-
-        closeModal('formModal');
-        renderTable();
-    }
-
-    // Menyiapkan Data ke Form untuk Edit
-    function editReward(code) {
-        const r = rewards.find(x => x.code === code);
-        if(!r) return;
-
+    function editReward(code, name, vendor_id, miles, desc, start, end) {
         document.getElementById('modalFormTitle').innerText = "Edit Hadiah";
-        document.getElementById('rewardId').value = r.code;
-        document.getElementById('rewardCode').value = r.code;
-        document.getElementById('rewardName').value = r.name;
-        document.getElementById('rewardVendor').value = r.vendor;
-        document.getElementById('rewardMiles').value = r.miles;
-        document.getElementById('rewardDesc').value = r.desc;
-        document.getElementById('rewardStart').value = r.start;
-        document.getElementById('rewardEnd').value = r.end;
-
+        document.getElementById('rewardId').value = code;
+        document.getElementById('rewardCode').value = code;
+        document.getElementById('rewardName').value = name;
+        document.getElementById('rewardVendor').value = vendor_id;
+        document.getElementById('rewardMiles').value = miles;
+        document.getElementById('rewardDesc').value = desc;
+        document.getElementById('rewardStart').value = start;
+        document.getElementById('rewardEnd').value = end;
         openModal('formModal');
     }
 
-    // DELETE Logic
     function promptDelete(code, name) {
         document.getElementById('deleteRewardId').value = code;
         document.getElementById('deleteRewardName').innerText = name;
         openModal('deleteModal');
     }
-
-    function confirmDelete() {
-        const code = document.getElementById('deleteRewardId').value;
-        rewards = rewards.filter(r => r.code !== code);
-        closeModal('deleteModal');
-        renderTable();
-    }
-
-    // Initial render
-    window.onload = renderTable;
 </script>
 {% endblock content %}
-=======
-    .rm-table th {
-        background-color: var(--soft-surface);
-        color: var(--text-primary);
-        padding: 14px 16px;
-        font-weight: 600;
-        border-bottom: 2px solid var(--border-color);
-        white-space: nowrap;
-    }
-
-    .rm-table td {
-        padding: 16px;
-        border-bottom: 1px solid var(--border-color);
-        vertical-align: middle;
-        color: var(--text-secondary);
-    }
-
-    .rm-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .rm-table tr:hover {
-        background-color: #F8FAFC;
-    }
-
-    /* Badges / Chips */
-    .rm-badge {
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .rm-badge-active {
-        background: linear-gradient(135deg, var(--light-blue), var(--border-color));
-        color: var(--text-primary);
-    }
-
-    .rm-badge-inactive {
-        background-color: #f1f5f9;
-        color: #64748b;
-    }
-</style>
-
-<div class="rewards-management-wrapper">
-    <div class="rm-container">
-        
-        <!-- Hero / Title Section -->
-        <div class="rm-page-header">
-            <h1>Katalog Hadiah & Vendor</h1>
-            <p>Kelola daftar hadiah, status ketersediaan, dan informasi mitra penyedia program Aero Miles.</p>
-        </div>
-
-        <!-- Main Content Card -->
-        <div class="rm-card">
-            
-            <!-- Filter Section (Task R - Point 2) -->
-            <!-- Nantinya form ini bisa diarahkan ke views.py Django Anda menggunakan method GET -->
-            <form method="GET" action="" class="rm-filter-section">
-                <div class="rm-filter-group">
-                    <label for="vendorFilter">Filter Penyedia (Vendor)</label>
-                    <select id="vendorFilter" name="vendor">
-                        <option value="">Semua Penyedia</option>
-                        <option value="garuda">Garuda Indonesia</option>
-                        <option value="starbucks">Starbucks</option>
-                        <option value="traveloka">Traveloka</option>
-                    </select>
-                </div>
-                
-                <div class="rm-filter-group">
-                    <label for="statusFilter">Status Keaktifan</label>
-                    <select id="statusFilter" name="status">
-                        <option value="">Semua Status</option>
-                        <option value="active">Aktif</option>
-                        <option value="inactive">Nonaktif</option>
-                    </select>
-                </div>
-
-                <div class="rm-filter-group">
-                    <button type="submit" class="rm-btn rm-btn-primary">Terapkan Filter</button>
-                </div>
-            </form>
-
-            <!-- Table Section (Task R - Point 1) -->
-            <div class="rm-table-responsive">
-                <table class="rm-table">
-                    <thead>
-                        <tr>
-                            <th>Kode Hadiah</th>
-                            <th>Nama Hadiah</th>
-                            <th>Deskripsi</th>
-                            <th>Penyedia</th>
-                            <th>Miles</th>
-                            <th>Periode Valid</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data Dummy (Nantinya diganti dengan loop Django, misal: {% for hadiah in list_hadiah %} ) -->
-                        <tr>
-                            <td><strong style="color: var(--text-primary);">RWD-001</strong></td>
-                            <td>Tiket JKT-DPS (Ekonomi)</td>
-                            <td>Penerbangan satu arah Jakarta ke Bali kelas ekonomi.</td>
-                            <td>Garuda Indonesia</td>
-                            <td>15,000</td>
-                            <td>01 Jan 2026 - 31 Des 2026</td>
-                            <td><span class="rm-badge rm-badge-active">Aktif</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong style="color: var(--text-primary);">RWD-002</strong></td>
-                            <td>Voucher Kopi 50K</td>
-                            <td>E-Voucher bernilai Rp50.000 untuk seluruh gerai.</td>
-                            <td>Starbucks</td>
-                            <td>1,500</td>
-                            <td>01 Jun 2026 - 31 Des 2026</td>
-                            <td><span class="rm-badge rm-badge-active">Aktif</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong style="color: var(--text-primary);">RWD-003</strong></td>
-                            <td>Diskon Hotel 20%</td>
-                            <td>Potongan harga untuk pemesanan hotel bintang 4 & 5.</td>
-                            <td>Traveloka</td>
-                            <td>3,000</td>
-                            <td>01 Jan 2026 - 30 Jun 2026</td>
-                            <td><span class="rm-badge rm-badge-inactive">Nonaktif</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-        </div>
-    </div>
-</div>
-{% endblock content %}
->>>>>>> 9692464ff9d16a7dad33a6e11bc77ea5946241dd

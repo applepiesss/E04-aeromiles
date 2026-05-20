@@ -280,8 +280,18 @@
             {% endif %}
         </div>
 
+        <!-- Edit Mode Toggle Button -->
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 0.75rem;">
+            <button type="button" id="editButton" class="btn-primary" onclick="enableEditMode()" style="display: none;">
+                Edit Profil
+            </button>
+            <button type="button" id="cancelEditButton" class="btn-secondary" onclick="disableEditMode()" style="display: none;">
+                Batal Edit
+            </button>
+        </div>
+
         <!-- Profile Form -->
-        <form method="POST" action="{% url 'main:profile_settings' %}?type={{ user_type }}">
+        <form id="profileForm" method="POST" action="{% url 'main:profile_settings' %}?type={{ user_type }}">
             {% csrf_token %}
 
             <!-- Personal Information Section -->
@@ -291,7 +301,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="salutation">Sapaan <span style="color: #E74C3C;">*</span></label>
-                        <select id="salutation" class="form-control" name="salutation" required>
+                        <select id="salutation" class="form-control" name="salutation" required disabled>
                             <option value="">-- Pilih Sapaan --</option>
                             {% for choice in salutation_choices %}
                                 <option value="{{ choice }}" {% if profile.salutation == choice %}selected{% endif %}>
@@ -303,7 +313,7 @@
                     <div class="form-group">
                         <label class="form-label" for="first_mid_name">Nama Depan & Tengah <span style="color: #E74C3C;">*</span></label>
                         <input type="text" id="first_mid_name" class="form-control" name="first_mid_name" 
-                               value="{{ profile.first_mid_name }}" required>
+                               value="{{ profile.first_mid_name }}" required disabled>
                     </div>
                 </div>
 
@@ -311,12 +321,12 @@
                     <div class="form-group">
                         <label class="form-label" for="last_name">Nama Belakang <span style="color: #E74C3C;">*</span></label>
                         <input type="text" id="last_name" class="form-control" name="last_name" 
-                               value="{{ profile.last_name }}" required>
+                               value="{{ profile.last_name }}" required disabled>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="date_of_birth">Tanggal Lahir <span style="color: #E74C3C;">*</span></label>
                         <input type="date" id="date_of_birth" class="form-control" name="date_of_birth" 
-                               value="{{ profile.date_of_birth }}" required>
+                               value="{{ profile.date_of_birth }}" required disabled>
                     </div>
                 </div>
             </div>
@@ -338,12 +348,12 @@
                     <div class="form-group">
                         <label class="form-label" for="country_code">Kode Negara <span style="color: #E74C3C;">*</span></label>
                         <input type="text" id="country_code" class="form-control" name="country_code" 
-                               value="{{ profile.country_code }}" placeholder="+62" required>
+                               value="{{ profile.country_code }}" placeholder="+62" required disabled>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="phone_number">Nomor Telepon <span style="color: #E74C3C;">*</span></label>
-                        <input type="tel" id="phone_number" class="form-control" name="phone_number" 
-                               value="{{ profile.phone_number }}" required>
+                        <label class="form-label" for="mobile_number">Nomor Telepon <span style="color: #E74C3C;">*</span></label>
+                        <input type="tel" id="mobile_number" class="form-control" name="mobile_number" 
+                               value="{{ profile.mobile_number }}" required disabled>
                     </div>
                 </div>
             </div>
@@ -354,9 +364,9 @@
 
                 <div class="form-row full">
                     <div class="form-group">
-                        <label class="form-label" for="nationality">Kewarganegaraan <span style="color: #E74C3C;">*</span></label>
-                        <input type="text" id="nationality" class="form-control" name="nationality" 
-                               value="{{ profile.nationality }}" required>
+                        <label class="form-label" for="kewarganegaraan">Kewarganegaraan <span style="color: #E74C3C;">*</span></label>
+                        <input type="text" id="kewarganegaraan" class="form-control" name="kewarganegaraan" 
+                               value="{{ profile.kewarganegaraan }}" required disabled>
                     </div>
                 </div>
             </div>
@@ -396,7 +406,7 @@
                     <div class="form-group">
                         <label class="form-label" for="airline_code">Kode Maskapai <span style="color: #E74C3C;">*</span></label>
                         <input type="text" id="airline_code" class="form-control" name="airline_code" 
-                               value="{{ profile.airline_code }}" placeholder="GA" required maxlength="10">
+                               value="{{ profile.airline_code }}" placeholder="GA" required disabled>
                     </div>
                 </div>
             </div>
@@ -409,8 +419,8 @@
                 </button>
 
                 <div class="profile-actions-right">
-                    <button type="submit" class="btn-primary">Simpan Perubahan</button>
-                    <a href="javascript:history.back()" class="btn-secondary">Batal</a>
+                    <button type="submit" id="saveButton" class="btn-primary" style="display: none;">Simpan Perubahan</button>
+                    <button type="button" id="viewModeButton" class="btn-primary" onclick="enableEditMode()" style="display: none;">Edit Profil</button>
                 </div>
             </div>
         </form>
@@ -460,6 +470,47 @@
 </div>
 
 <script>
+    // Get all form inputs that should be editable
+    const editableFields = [
+        'salutation', 'first_mid_name', 'last_name', 'country_code', 
+        'mobile_number', 'kewarganegaraan'
+    ];
+
+    function enableEditMode() {
+        // Enable all editable fields
+        editableFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.disabled = false;
+            }
+        });
+
+        // Show/hide buttons
+        document.getElementById('editButton').style.display = 'none';
+        document.getElementById('cancelEditButton').style.display = 'inline-block';
+        document.getElementById('viewModeButton').style.display = 'none';
+        document.getElementById('saveButton').style.display = 'inline-block';
+        
+        // Scroll to top
+        document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function disableEditMode() {
+        // Disable all editable fields
+        editableFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.disabled = true;
+            }
+        });
+
+        // Show/hide buttons
+        document.getElementById('editButton').style.display = 'none';
+        document.getElementById('cancelEditButton').style.display = 'none';
+        document.getElementById('viewModeButton').style.display = 'inline-block';
+        document.getElementById('saveButton').style.display = 'none';
+    }
+
     function openPasswordModal() {
         const modal = document.getElementById('passwordModal');
         modal.classList.add('show');
@@ -488,6 +539,9 @@
                 closePasswordModal();
             }
         });
+
+        // Initialize: show Edit Profil button on page load
+        disableEditMode();
 
         // Auto-hide messages after 5 seconds
         const messages = document.querySelectorAll('.alert');

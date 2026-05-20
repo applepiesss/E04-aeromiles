@@ -35,7 +35,7 @@
         <select name="bandara_tujuan" class="form-control" required>
             <option value="">Pilih bandara</option>
             {% for b in bandara_list %}
-            <option value="{{ b.kode }}">{{ b.kode }} – {{ b.kota }}</option>
+            <option value="{{ b.0 }}">{{ b.0 }} – {{ b.2 }}</option>
             {% endfor %}
         </select>
     </div>

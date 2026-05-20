@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'apps.main',
     'apps.members',
     'apps.miles',
+    'apps.rewards',
+    'apps.staf',
     'apps.vendors',
 ]
 
@@ -97,6 +99,7 @@ if PRODUCTION:
             'PORT': os.getenv('PROD_DB_PORT', '5432'),
             'OPTIONS': {
                 'sslmode': 'require', 
+                'options': '-c search_path=AEROMILES,public'
             },
         }
     }
@@ -109,6 +112,9 @@ else:
             'PASSWORD': os.getenv('DB_PASSWORD'),
             'HOST': os.getenv('DB_HOST'),
             'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+            'options': '-c search_path=aeromiles,public'
+        }
         }
     }
 
