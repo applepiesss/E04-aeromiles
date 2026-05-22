@@ -133,42 +133,46 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Kewarganegaraan</label>
-                    <input type="text" name="kewarganegaraan" class="form-control" placeholder="Contoh: American">
+                    <input type="text" name="kewarganegaraan" class="form-control" placeholder="Contoh: Indonesian" required>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">First / Mid Name</label>
-                    <input type="text" name="first_mid_name" class="form-control" placeholder="Nama depan/tengah">
+                    <input type="text" name="first_mid_name" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Last Name</label>
-                    <input type="text" name="last_name" class="form-control" placeholder="Nama belakang">
+                    <input type="text" name="last_name" class="form-control" required>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" placeholder="email@contoh.com">
+                    <input type="email" name="email" class="form-control" placeholder="email@domain.com" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-control" placeholder="Kata sandi">
+                    <input type="password" name="password" class="form-control" required>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Kode Negara</label>
-                    <input type="text" name="country_code" class="form-control" placeholder="+62">
+                    <input type="text" name="country_code" class="form-control" placeholder="Contoh: +62"
+                           pattern="\+[0-9]+"
+                           title='Harus diawali "+" diikuti angka' required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Nomor HP</label>
-                    <input type="text" name="mobile_number" class="form-control" placeholder="812xxxxxxx">
+                    <input type="text" name="mobile_number" class="form-control" placeholder="Contoh: 812xxxxxxx"
+                           pattern="[0-9]+" inputmode="numeric"
+                           title="Hanya boleh berisi angka" required>
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Tanggal Lahir</label>
-                <input type="date" name="tanggal_lahir" class="form-control">
+                <input type="date" name="tanggal_lahir" class="form-control" required>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeModal('modal-tambah')">Batal</button>
@@ -186,11 +190,6 @@
                 <h2>Edit Member – <span id="edit-nomor-label"></span></h2>
                 <button type="button" class="modal-close" onclick="closeModal('modal-edit')">&times;</button>
             </div>
-            <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="text" id="edit-email-display" class="form-control"
-                    disabled style="background:var(--bg-tint)">
-            </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Salutation</label>
@@ -200,33 +199,33 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Kewarganegaraan</label>
-                    <input type="text" id="edit-kewarganegaraan" name="kewarganegaraan" class="form-control">
+                    <input type="text" id="edit-kewarganegaraan" name="kewarganegaraan" class="form-control" required>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">First / Mid Name</label>
-                    <input type="text" id="edit-first-mid-name" name="first_mid_name" class="form-control">
+                    <input type="text" id="edit-first-mid-name" name="first_mid_name" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Last Name</label>
-                    <input type="text" id="edit-last-name" name="last_name" class="form-control">
+                    <input type="text" id="edit-last-name" name="last_name" class="form-control" required>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Kode Negara</label>
-                    <input type="text" id="edit-country-code" name="country_code" class="form-control">
+                    <input type="text" id="edit-country-code" name="country_code" class="form-control" pattern="\+[0-9]+" title='Harus diawali "+" diikuti angka' required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Nomor HP</label>
-                    <input type="text" id="edit-mobile-number" name="mobile_number" class="form-control">
+                    <input type="text" id="edit-mobile-number" name="mobile_number" class="form-control" pattern="[0-9]+" inputmode="numeric" title="Hanya boleh berisi angka" required>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Tanggal Lahir</label>
-                    <input type="date" id="edit-tanggal-lahir" name="tanggal_lahir" class="form-control">
+                    <input type="date" id="edit-tanggal-lahir" name="tanggal_lahir" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Tier</label>
@@ -286,7 +285,6 @@ function closeOnOverlay(event, id) {
 function openEdit(btn) {
     const d = btn.dataset;
     document.getElementById('edit-nomor-label').textContent = d.nomor;
-    document.getElementById('edit-email-display').value    = d.email;
     document.getElementById('edit-salutation').value       = d.salutation;
     document.getElementById('edit-first-mid-name').value   = d.firstMidName;
     document.getElementById('edit-last-name').value        = d.lastName;
