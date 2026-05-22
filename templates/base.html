@@ -280,8 +280,8 @@
                 <li><a href="{% url 'main:dashboard' %}" {% if request.path == '/dashboard/' %}class="active"{% endif %}>Dashboard</a></li>
                 <li><a href="{% url 'miles:claim_staff_list' %}" {% if request.path == '/miles/staff/claim/' in request.path %}class="active"{% endif %}>Kelola Klaim</a></li>
                 <li><a href="{% url 'members:kelola_member' %}" {% if request.path == '/members/kelola/' %}class="active"{% endif %}>Kelola Member</a></li>
-                <li><a href="http://127.0.0.1:8000/vendors/katalog_hadiah/">Kelola Hadiah</a></li>
-                <li><a href="http://127.0.0.1:8000/vendors/manajemen-mitra/">Kelola Mitra</a></li>
+                <li><a href="{% url 'vendors:daftar_hadiah' %}">Kelola Hadiah</a></li>
+                <li><a href="{% url 'vendors:manage_mitra' %}">Kelola Mitra</a></li>
                 <li><a href="{% url 'staf:laporan_transaksi' %}">Laporan Transaksi</a></li>
                 <li><a href="{% url 'main:profile_settings' %}">Profil</a></li>
                 <li style="margin-left: 0.5rem;"><a href="{% url 'main:logout' %}" class="btn-logout">Logout</a></li>
