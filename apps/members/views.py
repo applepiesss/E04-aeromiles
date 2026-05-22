@@ -189,11 +189,8 @@ def kelola_member(request):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT
-                m.nomor_member, m.email, m.id_tier,
-                m.award_miles, m.total_miles, m.tanggal_bergabung,
-                p.salutation, p.first_mid_name, p.last_name,
-                p.country_code, p.mobile_number,
-                p.tanggal_lahir, p.kewarganegaraan,
+                m.nomor_member, m.email, m.id_tier, m.award_miles, m.total_miles, m.tanggal_bergabung,
+                p.salutation, p.first_mid_name, p.last_name, p.country_code, p.mobile_number, p.tanggal_lahir, p.kewarganegaraan,
                 t.nama AS nama_tier
             FROM MEMBER m
             JOIN PENGGUNA p ON m.email = p.email
@@ -235,7 +232,7 @@ def tambah_member(request):
             # INSERT PENGGUNA
             cursor.execute("""
                 INSERT INTO PENGGUNA (email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, crypt(%s, gen_salt('bf')), %s, %s, %s, %s, %s, %s, %s)
             """, [email, password, salutation, first_mid_name, last_name, country_code, mobile_number, tanggal_lahir, kewarganegaraan])
 
             # INSERT MEMBER
